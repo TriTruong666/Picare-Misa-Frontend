@@ -42,7 +42,7 @@ export default function Home() {
               type="text"
               placeholder="Nhập email tại đây"
               id="form-email"
-              className="max-laptop:w-[370px] outline-none border border-black/20 px-[14px] py-[9px] rounded-[10px] max-laptop:text-[14px] transition-all duration-300 focus:border-black/50"
+              className="max-desktop:w-[370px] outline-none border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus:border-black/50"
             />
           </div>
           {/* Password */}
@@ -50,7 +50,7 @@ export default function Home() {
             <label htmlFor="form-email" className="text-sm font-bold">
               Mật khẩu
             </label>
-            <div className="flex justify-between  max-laptop:w-[370px] border border-black/20 px-[14px] py-[9px] rounded-[10px] max-laptop:text-[14px] transition-all duration-300 focus-within:border-black/50">
+            <div className="flex justify-between  max-desktop:w-[370px] border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus-within:border-black/50">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Nhập mật khẩu tại đây"

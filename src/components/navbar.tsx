@@ -1,18 +1,25 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/react";
 import Image from "next/image";
 import { IoIosSearch } from "react-icons/io";
+import { FiUserCheck } from "react-icons/fi";
 import { GoBell } from "react-icons/go";
 import { useAtom } from "jotai";
 import { navbarDropdownAtoms } from "@/atoms/navbar-atoms";
+import { AiOutlineLogout } from "react-icons/ai";
+import { IoHelpOutline } from "react-icons/io5";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 export default function Navbar() {
-  const [isToggleDropdown, setIsToggleDropdown] = useAtom(navbarDropdownAtoms);
-
   return (
     <div className="flex justify-between items-center">
       <Link href={`/dashboard/order`} className="">
@@ -31,7 +38,7 @@ export default function Navbar() {
           <input
             type="text"
             placeholder="Tìm kiếm nhanh"
-            className="outline-none bg-transparent text-[13px]"
+            className="outline-none bg-transparent text-[13px] w-[300px]"
           />
         </div>
         {/* Utils */}
@@ -42,15 +49,41 @@ export default function Navbar() {
         </div>
         {/* Config */}
         <div className="relative">
-          <Image
-            onClick={() => setIsToggleDropdown(!isToggleDropdown)}
-            src={`/avatar.jpg`}
-            alt=""
-            width={40}
-            height={40}
-            className="object-cover rounded-full cursor-pointer"
-          />
-          <SettingDropdown />
+          <Dropdown>
+            <DropdownTrigger>
+              <Image
+                src={`/avatar.jpg`}
+                alt=""
+                width={40}
+                height={40}
+                className="object-cover rounded-full cursor-pointer"
+              />
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Static Actions">
+              <DropdownItem
+                href="/"
+                key="setting"
+                startContent={<FiUserCheck />}
+              >
+                <p className="font-manrope">Tài khoản</p>
+              </DropdownItem>
+              <DropdownItem
+                key="help"
+                href="/"
+                startContent={<IoHelpOutline />}
+              >
+                <p className="font-manrope">Hỗ trợ</p>
+              </DropdownItem>
+              <DropdownItem
+                key="logout"
+                className="text-danger"
+                color="danger"
+                startContent={<AiOutlineLogout />}
+              >
+                <p className="font-manrope">Đăng xuất</p>
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
       </div>
     </div>
@@ -92,7 +125,7 @@ function SettingDropdown() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="absolute max-laptop:right-[-10px] z-[200] max-laptop:top-[50px] bg-white w-[200px] h-[300px] shadow-2xl rounded-[10px] flex flex-col"
+          className="absolute desktop:right-[-10px] desktop:top-[60px] max-desktop:right-[-10px] z-[200] max-desktop:top-[50px] bg-white w-[200px] h-[300px] shadow-2xl rounded-[10px] flex flex-col"
         ></motion.div>
       )}
     </AnimatePresence>

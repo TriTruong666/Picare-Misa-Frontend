@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --breakpoint-laptop: 1920px;
+  --breakpoint-desktop: 1920px;
   --color-custom-foreground: #ECECEC;
   --color-custom-primary: #008001;
   --color-background: var(--background);
