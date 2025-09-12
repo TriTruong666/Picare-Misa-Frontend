@@ -11,13 +11,9 @@ import Image from "next/image";
 import { IoIosSearch } from "react-icons/io";
 import { FiUserCheck } from "react-icons/fi";
 import { GoBell } from "react-icons/go";
-import { useAtom } from "jotai";
-import { navbarDropdownAtoms } from "@/atoms/navbar-atoms";
 import { AiOutlineLogout } from "react-icons/ai";
 import { IoHelpOutline } from "react-icons/io5";
-import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
 
 export default function Navbar() {
   return (
@@ -90,44 +86,44 @@ export default function Navbar() {
   );
 }
 
-function SettingDropdown() {
-  const [isToggleDropdown, setIsToggleDropdown] = useAtom(navbarDropdownAtoms);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+// function SettingDropdown() {
+//   const [isToggleDropdown, setIsToggleDropdown] = useAtom(navbarDropdownAtoms);
+//   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsToggleDropdown(false);
-      }
-    }
+//   useEffect(() => {
+//     function handleClickOutside(event: MouseEvent) {
+//       if (
+//         dropdownRef.current &&
+//         !dropdownRef.current.contains(event.target as Node)
+//       ) {
+//         setIsToggleDropdown(false);
+//       }
+//     }
 
-    if (isToggleDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
+//     if (isToggleDropdown) {
+//       document.addEventListener("mousedown", handleClickOutside);
+//     } else {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     }
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isToggleDropdown, setIsToggleDropdown]);
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, [isToggleDropdown, setIsToggleDropdown]);
 
-  return (
-    <AnimatePresence>
-      {isToggleDropdown && (
-        <motion.div
-          ref={dropdownRef}
-          onClick={(e) => e.stopPropagation()}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="absolute desktop:right-[-10px] desktop:top-[60px] max-desktop:right-[-10px] z-[200] max-desktop:top-[50px] bg-white w-[200px] h-[300px] shadow-2xl rounded-[10px] flex flex-col"
-        ></motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+//   return (
+//     <AnimatePresence>
+//       {isToggleDropdown && (
+//         <motion.div
+//           ref={dropdownRef}
+//           onClick={(e) => e.stopPropagation()}
+//           initial={{ opacity: 0 }}
+//           animate={{ opacity: 1 }}
+//           exit={{ opacity: 0 }}
+//           transition={{ duration: 0.3 }}
+//           className="absolute desktop:right-[-10px] desktop:top-[60px] max-desktop:right-[-10px] z-[200] max-desktop:top-[50px] bg-white w-[200px] h-[300px] shadow-2xl rounded-[10px] flex flex-col"
+//         ></motion.div>
+//       )}
+//     </AnimatePresence>
+//   );
+// }
