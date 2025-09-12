@@ -15,7 +15,7 @@ export function SyncOrderLoader() {
         autoplay
         className="w-[300px] h-[300px]"
       />
-      <h1 className="text-[17px] font-normal text-black/70">
+      <h1 className="text-[15px] font-normal text-black/70">
         Đang trong quá trình đồng bộ dữ liệu, vui lòng chờ...
       </h1>
     </div>

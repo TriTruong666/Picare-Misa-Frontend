@@ -8,15 +8,15 @@ type Data = {
     totalPage: number,
 }
 
-export const useGetOrders = (page: number, limit: number) => {
-    return useFetch<Order[]>(["orders", page, limit], async () =>
-        OrderService.getOrderService(page, limit)
+export const useGetOrders = (page: number, limit: number, status: boolean, finStatus?: string, carryStatus?: string) => {
+    return useFetch<Order[]>(["orders", page, limit,status, finStatus, carryStatus], async () =>
+        OrderService.getOrderService(page, limit, status, finStatus, carryStatus)
     );
   };
 
 
-  export const useGetOrderData = () => {
-    return useFetch<Data>(["data"], async () =>
-        OrderService.getOrderData()
+  export const useGetOrderData = (status: boolean, finStatus?: string, carryStatus?: string) => {
+    return useFetch<Data>(["data", status, finStatus, carryStatus], async () =>
+        OrderService.getOrderData(status, finStatus, carryStatus)
     );
   };

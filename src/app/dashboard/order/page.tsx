@@ -1,30 +1,62 @@
 "use client";
 
-import { Checkbox, Pagination, useToast } from "@heroui/react";
+import {
+  Checkbox,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Pagination,
+  useToast,
+} from "@heroui/react";
 import { TbFileExport } from "react-icons/tb";
+import { LuClipboardCheck } from "react-icons/lu";
 import { IoSyncOutline } from "react-icons/io5";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { Order } from "@/interfaces/Order";
 import { formatPrice, relativeTime } from "@/utils/format";
 import { useState } from "react";
 import { useGetOrderData, useGetOrders } from "@/hooks/orderHooks";
 import { useMutation } from "@tanstack/react-query";
-import { syncOrderService } from "@/services/orderService";
+import {
+  syncOrderService,
+  updateStatusOrderService,
+} from "@/services/orderService";
 import { showToast } from "@/utils/toast";
 import { SyncOrderLoader, TableOrderLoader } from "@/components/loading";
+import { UpdateOrder } from "@/interfaces/Service";
+import { EmptyOrder } from "@/components/empty";
 
 export default function Page() {
+  const searchParams = useSearchParams();
+
+  // Dùng .get chứ không destructure
+  const financialStatus = searchParams.get("financialStatus"); // string | null
+  const carrierStatus = searchParams.get("carrierStatus");
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [status] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [isLoadingSync, setIsLoadingSync] = useState(false);
-  const { data: data } = useGetOrderData();
-  const totalPage = Math.ceil((data?.count as number) / limit);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { data: orderData } = useGetOrderData(
+    status,
+    financialStatus as string,
+    carrierStatus as string
+  );
+  const totalPage = Math.ceil((orderData?.count as number) / limit);
   const {
-    data: orders,
+    data: orders = [],
     isLoading: isLoadingOrder,
     refetch,
-  } = useGetOrders(page, limit);
+  } = useGetOrders(
+    page,
+    limit,
+    status,
+    financialStatus as string,
+    carrierStatus as string
+  );
 
   const items = [
     {
@@ -33,11 +65,11 @@ export default function Page() {
     },
     {
       title: "Đã giao",
-      href: "/",
+      href: "/dashboard/order?carrierStatus=delivered",
     },
     {
       title: "Đã thanh toán",
-      href: "/",
+      href: "/dashboard/order?financialStatus=paid",
     },
   ];
 
@@ -59,11 +91,94 @@ export default function Page() {
       }
       setIsLoadingSync(false);
     },
+    onError() {
+      showToast({
+        content: "Quá trình đồng bộ thất bại",
+        description: "Vui lòng kiểm tra internet và thử lại",
+        status: "danger",
+      });
+    },
   });
+
+  const updateMutation = useMutation({
+    mutationKey: ["update-order"],
+    mutationFn: async ({
+      orderId,
+      data,
+    }: {
+      orderId: string;
+      data: UpdateOrder;
+    }) => updateStatusOrderService(orderId, data),
+    onMutate() {
+      setIsUpdating(true);
+    },
+    onSuccess() {
+      setIsUpdating(false);
+    },
+    onError() {
+      showToast({
+        content: "Đã có lỗi xảy ra, vui lòng thử lại",
+        status: "danger",
+      });
+    },
+  });
+
+  // Function
+  const selectableOrders =
+    orders?.filter((o) => o.cancelledStatus !== "cancelled") ?? [];
+  const isAllChecked =
+    selectableOrders.length > 0 &&
+    selectedOrders.length === selectableOrders.length;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // chỉ add những đơn chưa bị huỷ
+      setSelectedOrders(selectableOrders.map((o) => o.orderId));
+    } else {
+      setSelectedOrders([]);
+    }
+  };
+
+  const handleToggleOrder = (orderId: string) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
 
   const handleSyncOrder = () => {
     syncMutation.mutate();
   };
+
+  const handleBulkUpdate = async () => {
+    try {
+      await Promise.all(
+        selectedOrders.map((orderId) =>
+          updateMutation.mutateAsync({
+            orderId,
+            data: { status: true },
+          })
+        )
+      );
+
+      showToast({
+        content: "Cập nhật trạng thái thành công",
+        status: "success",
+        variant: "flat",
+      });
+
+      refetch(); // refresh lại danh sách đơn
+      setSelectedOrders([]); // clear các đơn đã chọn
+    } catch (error) {
+      showToast({
+        content: "Có lỗi xảy ra khi cập nhật trạng thái",
+        status: "danger",
+        variant: "flat",
+      });
+    }
+  };
+
   return (
     <div className="relative flex flex-col w-full min-h-full">
       {/* Main */}
@@ -94,10 +209,33 @@ export default function Page() {
         <div className="flex justify-between items-center">
           <div className="flex items-center rounded-full px-[7px] py-[5px] bg-neutral-400/40 gap-x-[5px]">
             {items.map((item, idx) => {
-              return <NavLinkItem key={idx} {...item} />;
+              return (
+                <NavLinkItem key={idx} {...item} onClick={() => setPage(1)} />
+              );
             })}
           </div>
-          <div className=""></div>
+          <div className="flex items-center">
+            {selectedOrders.length > 0 && (
+              <Dropdown>
+                <DropdownTrigger>
+                  <h2 className="text-sm underline underline-offset-4 cursor-pointer font-bold">
+                    {selectedOrders.length} đã chọn
+                  </h2>
+                </DropdownTrigger>
+                <DropdownMenu>
+                  <DropdownItem
+                    onPress={handleBulkUpdate}
+                    color="success"
+                    variant="light"
+                    key="check-order"
+                    startContent={<LuClipboardCheck />}
+                  >
+                    <p className="font-manrope">Check đơn hàng</p>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            )}
+          </div>
         </div>
         {/* Table */}
         {isLoadingSync ? (
@@ -112,13 +250,25 @@ export default function Page() {
               <TableOrderLoader />
             </div>
           </>
+        ) : orders.length === 0 ? (
+          <>
+            <div className="">
+              <EmptyOrder />
+            </div>
+          </>
         ) : (
           <>
             <table>
               <thead>
                 <tr className="border border-black/10 grid grid-cols-12">
                   <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-3 px-[25px] flex gap-x-[10px] items-center">
-                    <Checkbox size="sm" color="primary" radius="sm"></Checkbox>
+                    <Checkbox
+                      size="sm"
+                      color="primary"
+                      radius="sm"
+                      isSelected={isAllChecked}
+                      onValueChange={handleSelectAll}
+                    />
                     <p className="text-black/70">Mã đơn hàng</p>
                   </th>
 
@@ -141,7 +291,14 @@ export default function Page() {
               </thead>
               <tbody>
                 {orders?.map((order) => {
-                  return <OrderItem key={order.orderId} {...order} />;
+                  return (
+                    <OrderItem
+                      checked={selectedOrders.includes(order.orderId)}
+                      onToggle={handleToggleOrder}
+                      key={order.orderId}
+                      {...order}
+                    />
+                  );
                 })}
               </tbody>
             </table>
@@ -149,8 +306,11 @@ export default function Page() {
               <Pagination
                 isCompact
                 showControls
-                onChange={setPage}
-                initialPage={page}
+                onChange={(value) => {
+                  setPage(value);
+                  setSelectedOrders([]);
+                }}
+                page={page}
                 total={totalPage}
               />
             </div>
@@ -168,8 +328,13 @@ function OrderItem({
   financialStatus,
   cancelledStatus,
   source,
+  onToggle,
+  checked,
   totalPrice,
-}: Order) {
+}: Order & {
+  checked: boolean;
+  onToggle: (id: string, checked: boolean) => void;
+}) {
   const mappedFinancialTitle: Record<Order["financialStatus"], string> = {
     pending: "Chờ xử lý",
     paid: "Đã thanh toán",
@@ -182,10 +347,10 @@ function OrderItem({
   const mappedFinancialClass: Record<Order["financialStatus"], string> = {
     pending: "text-blue-500",
     paid: "text-green-500",
-    partially_paid: "Thanh toán một phần",
+    partially_paid: "text-orange-500",
     refunded: "text-purple-500",
     voided: "text-red-500",
-    partially_refunded: "Hoàn tiền một phần",
+    partially_refunded: "text-pink-500",
   };
 
   const mappedCarrierTitle: Record<Order["carrierStatus"], string> = {
@@ -193,6 +358,7 @@ function OrderItem({
     delivering: "Đang giao hàng",
     readytopick: "Chờ lấy hàng",
     delivered: "Đã giao",
+    return: "Trả hàng",
   };
 
   const mappedCarrierClass: Record<Order["carrierStatus"], string> = {
@@ -200,44 +366,31 @@ function OrderItem({
     delivering: "text-blue-500",
     readytopick: "text-pink-700",
     delivered: "text-green-500",
+    return: "text-purple-500",
   };
-  if (cancelledStatus === "cancelled") {
-    return (
-      <tr className="border-x border-b border-black/10 grid grid-cols-12">
-        <td className="text-start bg-red-500 font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px] flex gap-x-[10px] items-center">
-          <Checkbox isDisabled size="sm" color="default" radius="sm"></Checkbox>
-          <Link
-            href={`/dashboard/order/detail?orderId=${orderId}`}
-            className="text-white underline underline-offset-4"
-          >
-            {orderId}
-          </Link>
-        </td>
-        <td className="text-start font-semibold border-r text-white bg-red-500 border-black/10 text-[14px] py-[13px] max-desktop:col-span-2 desktop:col-span-2 px-[25px] flex items-center">
-          {relativeTime(saleDate)}
-        </td>
-        <td className="text-start font-semibold border-r border-black/10 text-white bg-red-500 text-[14px] py-[13px] col-span-2 px-[25px] flex items-center">
-          Đã huỷ
-        </td>
-        <td className="text-start font-semibold border-r border-black/10 text-[14px] text-white bg-red-500 py-[13px] col-span-2 px-[25px] flex items-center">
-          Đã huỷ
-        </td>
-        <td className="text-start font-semibold border-r border-black/10 text-[14px] text-white bg-red-500 py-[13px] desktop:col-span-1 max-desktop:col-span-2 px-[25px] flex items-center">
-          {formatPrice(totalPrice)}
-        </td>
-        <td className="text-start font-semibold text-[14px] py-[13px] text-white bg-red-500 max-desktop:col-span-1 desktop:col-span-2 px-[25px] flex items-center">
-          {source}
-        </td>
-      </tr>
-    );
-  }
+
+  const isCancelled = cancelledStatus === "cancelled";
+
   return (
-    <tr className="border-x border-b border-black/10 grid grid-cols-12">
+    <tr
+      className={`border-x border-b border-black/10 grid grid-cols-12 ${
+        isCancelled ? "bg-red-500 text-white" : ""
+      }`}
+    >
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px] flex gap-x-[10px] items-center">
-        <Checkbox size="sm" color="primary" radius="sm"></Checkbox>
+        <Checkbox
+          size="sm"
+          color={isCancelled ? "default" : "primary"}
+          radius="sm"
+          isDisabled={isCancelled}
+          isSelected={checked}
+          onValueChange={(value) => onToggle(orderId, value)}
+        />
         <Link
           href={`/dashboard/order/detail?orderId=${orderId}`}
-          className="text-black/70 underline underline-offset-4"
+          className={`underline underline-offset-4 ${
+            isCancelled ? "text-white" : "text-black/70"
+          }`}
         >
           {orderId}
         </Link>
@@ -246,14 +399,22 @@ function OrderItem({
         {relativeTime(saleDate)}
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-2 px-[25px] flex items-center">
-        <p className={`${mappedFinancialClass[financialStatus]}`}>
-          {mappedFinancialTitle[financialStatus]}
-        </p>
+        {isCancelled ? (
+          "Đã hủy"
+        ) : (
+          <p className={`${mappedFinancialClass[financialStatus]}`}>
+            {mappedFinancialTitle[financialStatus]}
+          </p>
+        )}
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-2 px-[25px] flex items-center">
-        <p className={`${mappedCarrierClass[carrierStatus]}`}>
-          {mappedCarrierTitle[carrierStatus]}
-        </p>
+        {isCancelled ? (
+          "Đã hủy"
+        ) : (
+          <p className={`${mappedCarrierClass[carrierStatus]}`}>
+            {mappedCarrierTitle[carrierStatus]}
+          </p>
+        )}
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] desktop:col-span-1 max-desktop:col-span-2 px-[25px] flex items-center">
         {formatPrice(totalPrice)}
@@ -268,14 +429,22 @@ function OrderItem({
 type NavLinkItemProps = {
   title: string;
   href: string;
+  onClick?(): void;
 };
 
-function NavLinkItem({ title, href }: NavLinkItemProps) {
+function NavLinkItem({ title, href, onClick }: NavLinkItemProps) {
   const pathName = usePathname();
-  const isActive = pathName === href;
+  const searchParams = useSearchParams();
+
+  const currentPath = `${pathName}${
+    searchParams.toString() ? "?" + searchParams.toString() : ""
+  }`;
+
+  const isActive = currentPath === href;
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={`rounded-full px-[25px] py-[5px] ${
         isActive ? "bg-white shadow-2xl" : ""
       }`}
