@@ -38,3 +38,15 @@ export const relativeTime = (dateString: string): string => {
 
   return "";
 }
+
+export const formatDateAndTime = (dateString: string) => {
+  const date = new Date(dateString);
+
+  const vnTime = new Date(date.getTime());
+  const day = vnTime.getDate().toString().padStart(2, "0");
+  const month = (vnTime.getMonth() + 1).toString().padStart(2, "0");
+  const year = vnTime.getFullYear();
+  const hours = vnTime.getHours().toString().padStart(2, "0");
+  const minutes = vnTime.getMinutes().toString().padStart(2, "0");
+  return `${day}/${month}/${year} lúc ${hours}:${minutes}`;
+}

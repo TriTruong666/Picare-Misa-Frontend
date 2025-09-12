@@ -31,19 +31,22 @@ import { EmptyOrder } from "@/components/empty";
 export default function Page() {
   const searchParams = useSearchParams();
 
-  // Dùng .get chứ không destructure
   const financialStatus = searchParams.get("financialStatus"); // string | null
   const carrierStatus = searchParams.get("carrierStatus");
+  const realCarrierStatus = searchParams.get("realCarrierStatus");
+  const source = searchParams.get("source");
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [status] = useState(false);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
+  const [limit] = useState(15);
   const [isLoadingSync, setIsLoadingSync] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { data: orderData } = useGetOrderData(
     status,
     financialStatus as string,
-    carrierStatus as string
+    carrierStatus as string,
+    realCarrierStatus as string,
+    source as string
   );
   const totalPage = Math.ceil((orderData?.count as number) / limit);
   const {
@@ -55,17 +58,23 @@ export default function Page() {
     limit,
     status,
     financialStatus as string,
-    carrierStatus as string
+    carrierStatus as string,
+    realCarrierStatus as string,
+    source as string
   );
 
   const items = [
     {
-      title: "Tất cả",
+      title: `Tất cả`,
       href: "/dashboard/order",
     },
     {
-      title: "Đã giao",
-      href: "/dashboard/order?carrierStatus=delivered",
+      title: "Có thể xuất hoá đơn",
+      href: "/dashboard/order?carrierStatus=delivered&realCarrierStatus=success",
+    },
+    {
+      title: "Có thể xuất kho",
+      href: "/dashboard/order?realCarrierStatus=success&carrierStatus=readytopick,delivering",
     },
     {
       title: "Đã thanh toán",
@@ -125,14 +134,21 @@ export default function Page() {
 
   // Function
   const selectableOrders =
-    orders?.filter((o) => o.cancelledStatus !== "cancelled") ?? [];
+    orders?.filter(
+      (o) =>
+        o.cancelledStatus !== "cancelled" &&
+        o.realCarrierStatus === "success" &&
+        (o.carrierStatus === "delivering" ||
+          o.carrierStatus === "readytopick" ||
+          o.carrierStatus === "delivered")
+    ) ?? [];
+
   const isAllChecked =
     selectableOrders.length > 0 &&
     selectedOrders.length === selectableOrders.length;
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      // chỉ add những đơn chưa bị huỷ
       setSelectedOrders(selectableOrders.map((o) => o.orderId));
     } else {
       setSelectedOrders([]);
@@ -197,12 +213,6 @@ export default function Page() {
                 Đồng bộ dữ liệu
               </p>
             </div>
-            <div className="flex items-center gap-x-[7px] px-[15px] py-[7px] shadow-2xl border border-neutral-600/30 rounded-[10px] cursor-pointer">
-              <TbFileExport className="text-black/70 text-[15px]" />
-              <p className="text-[12px] text-black/70 select-none">
-                Xuất dữ liệu
-              </p>
-            </div>
           </div>
         </div>
         {/* Nav */}
@@ -210,7 +220,14 @@ export default function Page() {
           <div className="flex items-center rounded-full px-[7px] py-[5px] bg-neutral-400/40 gap-x-[5px]">
             {items.map((item, idx) => {
               return (
-                <NavLinkItem key={idx} {...item} onClick={() => setPage(1)} />
+                <NavLinkItem
+                  key={idx}
+                  {...item}
+                  onClick={() => {
+                    setPage(1);
+                    setSelectedOrders([]);
+                  }}
+                />
               );
             })}
           </div>
@@ -245,6 +262,12 @@ export default function Page() {
             </div>
           </>
         ) : isLoadingOrder ? (
+          <>
+            <div className="">
+              <TableOrderLoader />
+            </div>
+          </>
+        ) : isUpdating ? (
           <>
             <div className="">
               <TableOrderLoader />
@@ -327,6 +350,7 @@ function OrderItem({
   carrierStatus,
   financialStatus,
   cancelledStatus,
+  realCarrierStatus,
   source,
   onToggle,
   checked,
@@ -378,16 +402,38 @@ function OrderItem({
       }`}
     >
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px] flex gap-x-[10px] items-center">
-        <Checkbox
-          size="sm"
-          color={isCancelled ? "default" : "primary"}
-          radius="sm"
-          isDisabled={isCancelled}
-          isSelected={checked}
-          onValueChange={(value) => onToggle(orderId, value)}
-        />
+        {carrierStatus === "readytopick" && realCarrierStatus === "success" && (
+          <Checkbox
+            size="sm"
+            color={isCancelled ? "default" : "primary"}
+            radius="sm"
+            isDisabled={isCancelled}
+            isSelected={checked}
+            onValueChange={(value) => onToggle(orderId, value)}
+          />
+        )}
+        {carrierStatus === "delivering" && realCarrierStatus === "success" && (
+          <Checkbox
+            size="sm"
+            color={isCancelled ? "default" : "primary"}
+            radius="sm"
+            isDisabled={isCancelled}
+            isSelected={checked}
+            onValueChange={(value) => onToggle(orderId, value)}
+          />
+        )}
+        {carrierStatus === "delivered" && realCarrierStatus === "success" && (
+          <Checkbox
+            size="sm"
+            color={isCancelled ? "default" : "primary"}
+            radius="sm"
+            isDisabled={isCancelled}
+            isSelected={checked}
+            onValueChange={(value) => onToggle(orderId, value)}
+          />
+        )}
         <Link
-          href={`/dashboard/order/detail?orderId=${orderId}`}
+          href={`/dashboard/order/detail/${orderId}`}
           className={`underline underline-offset-4 ${
             isCancelled ? "text-white" : "text-black/70"
           }`}
@@ -411,9 +457,33 @@ function OrderItem({
         {isCancelled ? (
           "Đã hủy"
         ) : (
-          <p className={`${mappedCarrierClass[carrierStatus]}`}>
-            {mappedCarrierTitle[carrierStatus]}
-          </p>
+          <>
+            {carrierStatus === "readytopick" &&
+              realCarrierStatus === "success" && (
+                <p className={`${mappedCarrierClass[carrierStatus]}`}>
+                  {mappedCarrierTitle[carrierStatus]} (Kho)
+                </p>
+              )}
+            {carrierStatus === "delivering" &&
+              realCarrierStatus === "success" && (
+                <p className={`${mappedCarrierClass[carrierStatus]}`}>
+                  {mappedCarrierTitle[carrierStatus]} (Kho)
+                </p>
+              )}
+            {carrierStatus === "delivered" &&
+              realCarrierStatus === "success" && (
+                <p className={`${mappedCarrierClass[carrierStatus]}`}>
+                  {mappedCarrierTitle[carrierStatus]} (Hoá đơn)
+                </p>
+              )}
+            {carrierStatus !== "readytopick" &&
+              carrierStatus !== "delivering" &&
+              carrierStatus !== "delivered" && (
+                <p className={`${mappedCarrierClass[carrierStatus]}`}>
+                  {mappedCarrierTitle[carrierStatus]}
+                </p>
+              )}
+          </>
         )}
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] desktop:col-span-1 max-desktop:col-span-2 px-[25px] flex items-center">
@@ -436,11 +506,19 @@ function NavLinkItem({ title, href, onClick }: NavLinkItemProps) {
   const pathName = usePathname();
   const searchParams = useSearchParams();
 
-  const currentPath = `${pathName}${
-    searchParams.toString() ? "?" + searchParams.toString() : ""
-  }`;
+  const url = new URL(href, "http://localhost:3000");
+  const hrefPath = url.pathname;
+  const hrefParams = new URLSearchParams(url.search);
 
-  const isActive = currentPath === href;
+  // chỉ active khi path + query trùng
+  const isActive =
+    pathName === hrefPath &&
+    Array.from(hrefParams.entries()).every(
+      ([key, value]) => searchParams.get(key) === value
+    ) &&
+    // đồng thời đảm bảo không thừa param khác
+    hrefParams.toString() === searchParams.toString();
+
   return (
     <Link
       href={href}

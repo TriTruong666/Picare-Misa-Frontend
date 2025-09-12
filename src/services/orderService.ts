@@ -3,7 +3,7 @@ import axiosClient from "@/utils/axios"
 
 const API_URL = process.env.NEXT_PUBLIC_TEST_API_URL
 
-export const getOrderService = async(page: number, limit: number, status: boolean, finStatus?: string, carryStatus?: string) => {
+export const getOrderService = async(page: number, limit: number, status: boolean, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string) => {
     try {   
         const res = await axiosClient.get(`${API_URL}/orders`, {
             params: {
@@ -11,7 +11,9 @@ export const getOrderService = async(page: number, limit: number, status: boolea
                 page: page,
                 status: status,
                 carrierStatus: carryStatus,
-                financialStatus: finStatus
+                financialStatus: finStatus,
+                realCarrierStatus: realCarryStatus,
+                source
             }
         })
         return res.data.orders
@@ -20,16 +22,27 @@ export const getOrderService = async(page: number, limit: number, status: boolea
     }
 }
 
-export const getOrderData = async(status: boolean, finStatus?: string, carryStatus?: string) => {
+export const getOrderDataService = async(status: boolean, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string) => {
     try {
         const res = await axiosClient.get(`${API_URL}/orders`, {
             params: {
                 page: 1,
                 status: status,
                 carrierStatus: carryStatus,
-                financialStatus: finStatus
+                financialStatus: finStatus,
+                realCarrierStatus: realCarryStatus,
+                source
             }
         })
+        return res.data
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+export const getDetailOrderService = async(orderId: string) => {
+    try {
+        const res = await axiosClient.get(`${API_URL}/orders/${orderId}`)
         return res.data
     } catch (error) {
         console.error(error)
