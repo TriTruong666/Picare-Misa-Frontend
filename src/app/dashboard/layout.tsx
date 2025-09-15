@@ -1,4 +1,5 @@
 import { EventAlert } from "@/components/alert";
+import AuthComponent from "@/components/auth";
 import SSEClient from "@/components/client";
 import Navbar from "@/components/navbar";
 import DashboardSidebar from "@/components/sidebar";
@@ -18,6 +19,7 @@ export default function Layout({
   return (
     <Suspense>
       <div className="relative flex flex-col font-manrope bg-custom-foreground w-screen h-screen">
+        <AuthComponent />
         <EventAlert />
         <SSEClient />
         {/* Navbar */}

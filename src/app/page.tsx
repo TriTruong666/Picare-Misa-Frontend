@@ -23,16 +23,9 @@ export default function Home() {
     mutationFn: loginService,
     onSuccess(data) {
       if (data.message === "Đăng nhập thành công") {
-        showToast({
-          status: "success",
-          content: "Dang nhap thanh cong",
-        });
+        handleGoToRoute("/dashboard/order");
       }
       if (data.message === "Sai email hoặc mật khẩu, vui lòng thử lại") {
-        showToast({
-          status: "danger",
-          content: "Dang nhap that bai",
-        });
         setLoginData({
           ...loginData,
           password: "",

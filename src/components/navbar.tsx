@@ -15,57 +15,24 @@ import { AiOutlineLogout } from "react-icons/ai";
 import { RiSettingsLine } from "react-icons/ri";
 import { IoHelpOutline } from "react-icons/io5";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { logoutService } from "@/services/authService";
+import { handleGoToRoute } from "@/utils/navigate";
 
 export default function Navbar() {
-  const [debounceValue, setDebounceValue] = useState("");
-  const [searchValue, setSearchValue] = useState("");
+  const logoutMutation = useMutation({
+    mutationKey: ["logout"],
+    mutationFn: logoutService,
+    onSuccess(data) {
+      if (data.message === "Đăng xuất thành công") {
+        handleGoToRoute("/");
+      }
+    },
+  });
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  // Đồng bộ khi load trang
-  useEffect(() => {
-    const urlQuery = searchParams.get("query") || "";
-    setSearchValue(urlQuery);
-    setDebounceValue(urlQuery);
-  }, [pathname]); // chỉ chạy khi đổi route
-
-  // debounce input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebounceValue(searchValue);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchValue]);
-
-  useEffect(() => {
-    if (pathname !== "/dashboard/order") return;
-
-    const currentQuery = searchParams.get("query") || "";
-
-    if (debounceValue === currentQuery) return;
-
-    if (debounceValue.trim()) {
-      router.replace(`/dashboard/order?query=${debounceValue}`);
-    } else {
-      router.replace(`/dashboard/order`);
-    }
-  }, [debounceValue, pathname]);
-
-  useEffect(() => {
-    if (pathname !== "/dashboard/order") {
-      setSearchValue("");
-      setDebounceValue("");
-    }
-  }, [pathname]);
-
-  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-  }, []);
-
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
   return (
     <div className="flex justify-between items-center">
       <Link href={`/dashboard/order`}>
@@ -82,8 +49,6 @@ export default function Navbar() {
         <div className="flex px-[15px] py-[7px] bg-white rounded-[8px] items-center gap-x-[10px] transition-all duration-300 border focus-within:border-black/50">
           <IoIosSearch className="text-[18px] text-black/70" />
           <input
-            value={searchValue}
-            onChange={handleSearch}
             type="text"
             placeholder="Tìm kiếm nhanh"
             className="outline-none bg-transparent text-[13px] w-[300px]"
@@ -121,6 +86,7 @@ export default function Navbar() {
                 <p className="font-manrope">Hỗ trợ</p>
               </DropdownItem>
               <DropdownItem
+                onPress={handleLogout}
                 key="logout"
                 className="text-danger"
                 color="danger"

@@ -82,7 +82,7 @@ export default function Page() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-x-[15px]">
               <Button
-                onPress={() => navigate.push("/dashboard/order")}
+                onPress={() => navigate.back()}
                 isIconOnly
                 radius="full"
                 size="md"
