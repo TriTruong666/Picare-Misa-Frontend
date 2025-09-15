@@ -5,7 +5,10 @@ import { alertState } from "@/atoms/alert-atoms";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_TEST_API_URL;
+const API_URL =
+  process.env.NODE_ENV === "development"
+    ? process.env.NEXT_PUBLIC_TEST_API_URL
+    : process.env.NEXT_PUBLIC_API_URL;
 
 export default function SSEClient() {
   const setClientData = useSetAtom(clientDataState);
