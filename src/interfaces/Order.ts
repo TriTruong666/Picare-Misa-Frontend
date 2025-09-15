@@ -15,7 +15,10 @@ export type Order = {
     totalDiscountPrice: number;
     cancelledStatus: string;
     source: string;
-    status: boolean;
+    status: 
+    | "invoice" 
+    | "stock" 
+    | "pending";
     note: string;
     line_items: LineItem[]
   };

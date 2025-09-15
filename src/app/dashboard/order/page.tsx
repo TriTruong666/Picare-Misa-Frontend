@@ -7,13 +7,11 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Pagination,
-  useToast,
 } from "@heroui/react";
-import { TbFileExport } from "react-icons/tb";
 import { LuClipboardCheck } from "react-icons/lu";
 import { IoSyncOutline } from "react-icons/io5";
 import Link from "next/link";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Order } from "@/interfaces/Order";
 import { formatPrice, relativeTime } from "@/utils/format";
 import { useState } from "react";
@@ -30,23 +28,24 @@ import { EmptyOrder } from "@/components/empty";
 
 export default function Page() {
   const searchParams = useSearchParams();
-
-  const financialStatus = searchParams.get("financialStatus"); // string | null
+  const query = searchParams.get("query");
+  const financialStatus = searchParams.get("financialStatus");
   const carrierStatus = searchParams.get("carrierStatus");
   const realCarrierStatus = searchParams.get("realCarrierStatus");
   const source = searchParams.get("source");
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  const [status] = useState(false);
+  const [status] = useState("pending");
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
   const [isLoadingSync, setIsLoadingSync] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { data: orderData } = useGetOrderData(
-    status,
+    status as string,
     financialStatus as string,
     carrierStatus as string,
     realCarrierStatus as string,
-    source as string
+    source as string,
+    query as string
   );
   const totalPage = Math.ceil((orderData?.count as number) / limit);
   const {
@@ -56,11 +55,12 @@ export default function Page() {
   } = useGetOrders(
     page,
     limit,
-    status,
+    status as string,
     financialStatus as string,
     carrierStatus as string,
     realCarrierStatus as string,
-    source as string
+    source as string,
+    query as string
   );
 
   const items = [
@@ -170,12 +170,20 @@ export default function Page() {
   const handleBulkUpdate = async () => {
     try {
       await Promise.all(
-        selectedOrders.map((orderId) =>
-          updateMutation.mutateAsync({
+        selectedOrders.map((orderId) => {
+          const order = orders.find((o) => o.orderId === orderId);
+
+          const data: UpdateOrder =
+            order?.realCarrierStatus === "success" &&
+            order?.carrierStatus === "delivered"
+              ? { status: "invoice" }
+              : { status: "stock" };
+
+          return updateMutation.mutateAsync({
             orderId,
-            data: { status: true },
-          })
-        )
+            data,
+          });
+        })
       );
 
       showToast({
@@ -243,11 +251,11 @@ export default function Page() {
                   <DropdownItem
                     onPress={handleBulkUpdate}
                     color="success"
-                    variant="light"
+                    variant="flat"
                     key="check-order"
                     startContent={<LuClipboardCheck />}
                   >
-                    <p className="font-manrope">Check đơn hàng</p>
+                    <p className="font-manrope">Phân loại và xử lý</p>
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>

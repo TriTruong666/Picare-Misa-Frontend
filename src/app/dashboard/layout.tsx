@@ -1,3 +1,5 @@
+import { EventAlert } from "@/components/alert";
+import SSEClient from "@/components/client";
 import Navbar from "@/components/navbar";
 import DashboardSidebar from "@/components/sidebar";
 import { Metadata } from "next";
@@ -14,6 +16,8 @@ export default function Layout({
 }>) {
   return (
     <div className="relative flex flex-col font-manrope bg-custom-foreground w-screen h-screen">
+      <EventAlert />
+      <SSEClient />
       {/* Navbar */}
       <div className="shrink-0 px-[30px]">
         <Navbar />

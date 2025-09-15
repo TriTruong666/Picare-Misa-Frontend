@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import { IoFileTrayOutline } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa6";
+import { LuWarehouse } from "react-icons/lu";
+import { TbInvoice } from "react-icons/tb";
 
 export default function DashboardSidebar() {
   const items = [
@@ -13,9 +15,14 @@ export default function DashboardSidebar() {
       href: "/dashboard/order",
     },
     {
-      title: "Đã xử lý",
-      icon: FaCheck,
-      href: "/dashboard/order/complete",
+      title: "Xuất hoá đơn",
+      icon: TbInvoice,
+      href: "/dashboard/order/invoice",
+    },
+    {
+      title: "Xuất kho",
+      icon: LuWarehouse,
+      href: "/dashboard/order/stock",
     },
   ];
   return (

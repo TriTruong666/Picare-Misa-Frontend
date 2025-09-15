@@ -1,3 +1,8 @@
 export type UpdateOrder = {
-    status: boolean
+    status: string
+}
+
+export type Login = {
+    email: string,
+    password: string
 }

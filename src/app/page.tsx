@@ -1,15 +1,72 @@
 "use client";
+import { useGetOwnerInfo } from "@/hooks/userHooks";
+import { Login } from "@/interfaces/Service";
+import { loginService } from "@/services/authService";
+import { handleGoToRoute } from "@/utils/navigate";
+import { showToast } from "@/utils/toast";
 import { Button } from "@heroui/react";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
-import { useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { RxEyeOpen, RxEyeClosed } from "react-icons/rx";
 
 export default function Home() {
+  const { data: info, isLoading: isGetUserInfo } = useGetOwnerInfo();
   const [showPassword, setShowPassword] = useState(false);
+  const [loginData, setLoginData] = useState<Login>({
+    email: "",
+    password: "",
+  });
+
+  const loginMutation = useMutation({
+    mutationKey: ["login", loginData.email, loginData.password],
+    mutationFn: loginService,
+    onSuccess(data) {
+      if (data.message === "Đăng nhập thành công") {
+        showToast({
+          status: "success",
+          content: "Dang nhap thanh cong",
+        });
+      }
+      if (data.message === "Sai email hoặc mật khẩu, vui lòng thử lại") {
+        showToast({
+          status: "danger",
+          content: "Dang nhap that bai",
+        });
+        setLoginData({
+          ...loginData,
+          password: "",
+        });
+      }
+    },
+  });
+
+  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginData({
+      ...loginData,
+      [name]: value,
+    });
+  };
+
+  const handleLogin = async () => {
+    try {
+      await loginMutation.mutateAsync(loginData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleShowpassword = () => {
     setShowPassword(!showPassword);
   };
+
+  useEffect(() => {
+    if (isGetUserInfo) return;
+    if (info) {
+      handleGoToRoute("/dashboard/order");
+    }
+  }, [info, isGetUserInfo]);
   return (
     <div className="relative w-screen h-screen max-h-screen overflow-hidden flex justify-center items-center font-manrope select-none">
       <div className="flex justify-center absolute left-[40px] top-[20px]">
@@ -40,6 +97,8 @@ export default function Home() {
             </label>
             <input
               type="text"
+              name="email"
+              onChange={handleOnChange}
               placeholder="Nhập email tại đây"
               id="form-email"
               className="max-desktop:w-[370px] outline-none border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus:border-black/50"
@@ -52,7 +111,9 @@ export default function Home() {
             </label>
             <div className="flex justify-between  max-desktop:w-[370px] border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus-within:border-black/50">
               <input
+                name="password"
                 type={showPassword ? "text" : "password"}
+                onChange={handleOnChange}
                 placeholder="Nhập mật khẩu tại đây"
                 id="form-email"
                 className="outline-none w-[90%]"
@@ -75,7 +136,10 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-[10px]">
-            <Button className="w-full bg-custom-primary/50 text-custom-primary">
+            <Button
+              onPress={handleLogin}
+              className="w-full bg-custom-primary/50 text-custom-primary"
+            >
               <p className="text-custom-primary font-semibold">Đăng nhập</p>
             </Button>
           </div>

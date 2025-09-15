@@ -2,9 +2,14 @@
 
 import { IoIosArrowBack } from "react-icons/io";
 import { useGetDetailOrder } from "@/hooks/orderHooks";
-import { Button } from "@heroui/react";
+import { Button, Chip } from "@heroui/react";
 import { useParams, useRouter } from "next/navigation";
 import { formatDateAndTime, formatPrice } from "@/utils/format";
+import { Order } from "@/interfaces/Order";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateStatusOrderService } from "@/services/orderService";
+import { UpdateOrder } from "@/interfaces/Service";
+import { showToast } from "@/utils/toast";
 
 export default function Page() {
   const navigate = useRouter();
@@ -16,6 +21,59 @@ export default function Page() {
     0
   );
 
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationKey: ["update-order"],
+    mutationFn: async ({
+      orderId,
+      data,
+    }: {
+      orderId: string;
+      data: UpdateOrder;
+    }) => updateStatusOrderService(orderId, data),
+
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["detail"],
+      });
+    },
+    onError() {
+      showToast({
+        content: "Đã có lỗi xảy ra, vui lòng thử lại",
+        status: "danger",
+      });
+    },
+  });
+
+  const handleUpdateOrderStatus = async (status: string) => {
+    try {
+      await updateMutation.mutateAsync({
+        orderId: orderId,
+        data: {
+          status: status,
+        },
+      });
+    } catch (error) {
+      showToast({
+        content: "Có lỗi xảy ra khi cập nhật trạng thái",
+        status: "danger",
+        variant: "flat",
+      });
+    }
+  };
+
+  const statusMap: Record<Order["status"], string> = {
+    pending: "Chờ xử lý",
+    invoice: "Đã xử lý hoá đơn",
+    stock: "Đã xử lý kho",
+  };
+
+  const statusClassMap: Record<Order["status"], string> = {
+    pending: "bg-neutral-600/30 text-black/70",
+    invoice: "bg-success-400/50 text-success-600",
+    stock: "bg-warning-400/50 text-warning-700",
+  };
+
   return (
     <div className="flex w-full min-h-full gap-x-[30px]">
       {/* Line Items */}
@@ -24,7 +82,7 @@ export default function Page() {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-x-[15px]">
               <Button
-                onPress={() => navigate.back()}
+                onPress={() => navigate.push("/dashboard/order")}
                 isIconOnly
                 radius="full"
                 size="md"
@@ -32,9 +90,22 @@ export default function Page() {
                 <IoIosArrowBack className="text-[18px]" />
               </Button>
               <div className="flex flex-col">
-                <h2 className="font-semibold text-[19px] text-black/80">
-                  Mã đơn hàng &gt; {orderId}
-                </h2>
+                <div className="flex items-center gap-x-[15px]">
+                  <h2 className="font-semibold text-[19px] text-black/80">
+                    Mã đơn hàng &gt; {orderId}
+                  </h2>
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    className={`${
+                      detail?.status
+                        ? statusClassMap[detail.status]
+                        : "bg-neutral-600/30 text-black/70"
+                    }`}
+                  >
+                    {detail?.status ? statusMap[detail.status] : "Chưa xử lý"}
+                  </Chip>
+                </div>
                 <p className="text-[13px] text-black/70">
                   {formatDateAndTime(detail?.saleDate as string)} /{" "}
                   <span className="font-bold">Sàn {detail?.source}</span>
@@ -132,12 +203,38 @@ export default function Page() {
               <p className="text-sm font-semibold">{detail?.source}</p>
             </div>
           </div>
+          {detail?.carrierStatus === "delivered" &&
+            detail?.realCarrierStatus === "success" && (
+              <Button
+                onPress={() => handleUpdateOrderStatus("invoice")}
+                color="success"
+                variant="flat"
+              >
+                Xuất hoá đơn
+              </Button>
+            )}
+          {detail?.carrierStatus === "delivering" &&
+            detail?.realCarrierStatus === "success" && (
+              <Button
+                onPress={() => handleUpdateOrderStatus("stock")}
+                color="warning"
+                variant="flat"
+              >
+                Xuất kho
+              </Button>
+            )}
+          {detail?.carrierStatus === "readytopick" &&
+            detail?.realCarrierStatus === "success" && (
+              <Button
+                onPress={() => handleUpdateOrderStatus("stock")}
+                color="warning"
+                variant="flat"
+              >
+                Xuất kho
+              </Button>
+            )}
         </div>
       </div>
     </div>
   );
-}
-
-function ProductItem() {
-  return <div className="flex justify-between"></div>;
 }

@@ -13,7 +13,7 @@ import { TableOrderLoader } from "@/components/loading";
 import { EmptyCompleteOrder } from "@/components/empty";
 
 export default function Page() {
-  const [status] = useState(true);
+  const [status] = useState("invoice");
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
   const { data: orderData } = useGetOrderData(status);
@@ -159,7 +159,7 @@ function OrderItem({
     >
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px] flex gap-x-[10px] items-center">
         <Link
-          href={`/dashboard/order/detail?orderId=${orderId}`}
+          href={`/dashboard/order/detail/${orderId}`}
           className={`underline underline-offset-4 text-custom-primary`}
         >
           {orderId}

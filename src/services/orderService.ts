@@ -1,11 +1,10 @@
 import { UpdateOrder } from "@/interfaces/Service"
 import axiosClient from "@/utils/axios"
 
-const API_URL = process.env.NEXT_PUBLIC_TEST_API_URL
 
-export const getOrderService = async(page: number, limit: number, status: boolean, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string) => {
+export const getOrderService = async(page: number, limit: number, status?: string, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string, query?: string) => {
     try {   
-        const res = await axiosClient.get(`${API_URL}/orders`, {
+        const res = await axiosClient.get(`/orders`, {
             params: {
                 limit: limit,
                 page: page,
@@ -13,7 +12,8 @@ export const getOrderService = async(page: number, limit: number, status: boolea
                 carrierStatus: carryStatus,
                 financialStatus: finStatus,
                 realCarrierStatus: realCarryStatus,
-                source
+                source,
+                orderId: query
             }
         })
         return res.data.orders
@@ -22,16 +22,17 @@ export const getOrderService = async(page: number, limit: number, status: boolea
     }
 }
 
-export const getOrderDataService = async(status: boolean, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string) => {
+export const getOrderDataService = async(status?: string, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string, query?: string) => {
     try {
-        const res = await axiosClient.get(`${API_URL}/orders`, {
+        const res = await axiosClient.get(`/orders`, {
             params: {
                 page: 1,
                 status: status,
                 carrierStatus: carryStatus,
                 financialStatus: finStatus,
                 realCarrierStatus: realCarryStatus,
-                source
+                source,
+                orderId: query,
             }
         })
         return res.data
@@ -42,16 +43,17 @@ export const getOrderDataService = async(status: boolean, finStatus?: string, ca
 
 export const getDetailOrderService = async(orderId: string) => {
     try {
-        const res = await axiosClient.get(`${API_URL}/orders/${orderId}`)
+        const res = await axiosClient.get(`/orders/${orderId}`)
         return res.data
     } catch (error) {
         console.error(error)
     }
 }
 
+
 export const syncOrderService = async() => {
     try {
-        const res = await axiosClient.post(`${API_URL}/orders/sync`)
+        const res = await axiosClient.post(`/orders/sync`)
         return res.data
     } catch (error) {
         console.error(error)
@@ -60,9 +62,10 @@ export const syncOrderService = async() => {
 
 export const updateStatusOrderService = async(orderId: string, data: UpdateOrder) => {
     try {
-        const res = await axiosClient.put(`${API_URL}/orders/${orderId}/status`, data);
+        const res = await axiosClient.put(`/orders/${orderId}/status`, data);
         return res.data
     } catch (error) {
         console.error(error)
     }
 }   
+

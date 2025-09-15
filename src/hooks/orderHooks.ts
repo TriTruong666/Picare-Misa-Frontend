@@ -8,16 +8,16 @@ type Data = {
     totalPage: number,
 }
 
-export const useGetOrders = (page: number, limit: number, status: boolean, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string) => {
-    return useFetch<Order[]>(["orders", page, limit,status, finStatus, carryStatus, realCarryStatus, source], async () =>
-        OrderService.getOrderService(page, limit, status, finStatus, carryStatus, realCarryStatus, source)
+export const useGetOrders = (page: number, limit: number, status?: string, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string, query?: string) => {
+    return useFetch<Order[]>(["orders", page, limit,status, finStatus, carryStatus, realCarryStatus, source, query], async () =>
+        OrderService.getOrderService(page, limit, status, finStatus, carryStatus, realCarryStatus, source, query)
     );
   };
 
 
-export const useGetOrderData = (status: boolean, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string) => {
-    return useFetch<Data>(["data", status, finStatus, carryStatus, realCarryStatus, source], async () =>
-        OrderService.getOrderDataService(status, finStatus, carryStatus, realCarryStatus, source)
+export const useGetOrderData = (status?: string, finStatus?: string, carryStatus?: string, realCarryStatus?: string, source?: string, query?: string) => {
+    return useFetch<Data>(["data", status, finStatus, carryStatus, realCarryStatus, source, query], async () =>
+        OrderService.getOrderDataService(status, finStatus, carryStatus, realCarryStatus, source, query)
     );
   };
 
