@@ -12,6 +12,7 @@ import { RxEyeOpen, RxEyeClosed } from "react-icons/rx";
 
 export default function Home() {
   const { data: info, isLoading: isGetUserInfo } = useGetOwnerInfo();
+  const [validateError, setValidateError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState<Login>({
     email: "",
@@ -30,6 +31,7 @@ export default function Home() {
           ...loginData,
           password: "",
         });
+        setValidateError(data.message);
       }
     },
   });
@@ -40,9 +42,20 @@ export default function Home() {
       ...loginData,
       [name]: value,
     });
+    console.log(loginData);
+  };
+
+  const handleOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
   };
 
   const handleLogin = async () => {
+    if (loginData.email === "" || loginData.password === "") {
+      setValidateError("Vui lòng nhập email và password để đăng nhập");
+      return;
+    }
     try {
       await loginMutation.mutateAsync(loginData);
     } catch (error) {
@@ -89,6 +102,8 @@ export default function Home() {
               Email
             </label>
             <input
+              value={loginData.email}
+              onKeyDown={handleOnEnter}
               type="text"
               name="email"
               onChange={handleOnChange}
@@ -104,6 +119,8 @@ export default function Home() {
             </label>
             <div className="flex justify-between  max-desktop:w-[370px] border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus-within:border-black/50">
               <input
+                value={loginData.password}
+                onKeyDown={handleOnEnter}
                 name="password"
                 type={showPassword ? "text" : "password"}
                 onChange={handleOnChange}
@@ -128,6 +145,10 @@ export default function Home() {
               )}
             </div>
           </div>
+          {validateError && (
+            <p className="text-[13px] text-red-500">{validateError}</p>
+          )}
+
           <div className="mt-[10px]">
             <Button
               onPress={handleLogin}

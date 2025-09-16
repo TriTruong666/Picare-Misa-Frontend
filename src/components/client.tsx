@@ -20,7 +20,7 @@ export default function SSEClient() {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setClientData(data);
-      setIsVisible(true); // khi có event thì bật alert
+      setIsVisible(true);
       console.log("🔔 SSE data:", data);
     };
 
