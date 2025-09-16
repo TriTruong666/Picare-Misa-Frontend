@@ -3,12 +3,12 @@ import { addToast } from "@heroui/react";
 type ToastProps = {
   content: string;
   status?:
-    | "default"
-    | "primary"
-    | "secondary"
-    | "success"
-    | "warning"
-    | "danger";
+  | "default"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger";
   description?: string;
   variant?: "solid" | "bordered" | "flat";
   baseClassName?: string;

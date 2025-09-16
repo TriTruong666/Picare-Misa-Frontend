@@ -4,14 +4,16 @@ import { User } from "@/interfaces/User";
 import { Chip } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { IoFileTrayOutline } from "react-icons/io5";
 import { LuWarehouse } from "react-icons/lu";
+import { AiOutlineScan } from "react-icons/ai";
 import { TbInvoice } from "react-icons/tb";
 
 export default function DashboardSidebar() {
   const { data: info } = useGetOwnerInfo();
-  const items = [
+
+  const adminMenu = [
     {
       title: "Đơn hàng",
       icon: IoFileTrayOutline,
@@ -27,6 +29,46 @@ export default function DashboardSidebar() {
       icon: LuWarehouse,
       href: "/dashboard/order/stock",
     },
+    {
+      title: "Quét Barcode",
+      icon: AiOutlineScan,
+      href: "/dashboard/scan",
+    },
+  ];
+  const staffMenu = [
+    {
+      title: "Đơn hàng",
+      icon: IoFileTrayOutline,
+      href: "/dashboard/order",
+    },
+    {
+      title: "Xuất kho",
+      icon: LuWarehouse,
+      href: "/dashboard/order/stock",
+    },
+    {
+      title: "Quét Barcode",
+      icon: AiOutlineScan,
+      href: "/dashboard/scan",
+    },
+  ];
+
+  const accountMenu = [
+    {
+      title: "Đơn hàng",
+      icon: IoFileTrayOutline,
+      href: "/dashboard/order",
+    },
+    {
+      title: "Xuất hoá đơn",
+      icon: TbInvoice,
+      href: "/dashboard/order/invoice",
+    },
+    {
+      title: "Quét Barcode",
+      icon: AiOutlineScan,
+      href: "/dashboard/scan",
+    },
   ];
 
   const roleMap: Record<User["role"], string> = {
@@ -38,11 +80,27 @@ export default function DashboardSidebar() {
   return (
     <div className="flex flex-col w-full desktop:h-[850px] max-desktop:h-[640px] px-[12px] py-[20px] justify-between bg-white rounded-[15px] shadow">
       {/* Main */}
-      <div className="flex flex-col gap-y-[15px]">
-        {items.map((item, idx) => {
-          return <SidebarItem key={idx} {...item} />;
-        })}
-      </div>
+      {info?.role === "admin" && (
+        <div className="flex flex-col gap-y-[15px]">
+          {adminMenu.map((item, idx) => {
+            return <SidebarItem key={idx} {...item} />;
+          })}
+        </div>
+      )}
+      {info?.role === "staff" && (
+        <div className="flex flex-col gap-y-[15px]">
+          {staffMenu.map((item, idx) => {
+            return <SidebarItem key={idx} {...item} />;
+          })}
+        </div>
+      )}
+      {info?.role === "accountant" && (
+        <div className="flex flex-col gap-y-[15px]">
+          {accountMenu.map((item, idx) => {
+            return <SidebarItem key={idx} {...item} />;
+          })}
+        </div>
+      )}
       <div className="flex justify-between items-center px-[10px]">
         <div className="flex flex-col gap-y-[2px]">
           <strong className="text-[14px]">{info?.name || "Username"}</strong>

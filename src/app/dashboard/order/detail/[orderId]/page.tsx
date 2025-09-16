@@ -202,6 +202,12 @@ export default function Page() {
               <p className="text-sm">Sàn</p>
               <p className="text-sm font-semibold">{detail?.source}</p>
             </div>
+            <div className="flex items-center justify-between">
+              <p className="text-sm">Mã vận đơn</p>
+              <p className="text-sm font-semibold text-red-500">
+                {detail?.trackingNumber || "Chưa giao đơn"}
+              </p>
+            </div>
           </div>
           {detail?.carrierStatus === "delivered" &&
             detail?.realCarrierStatus === "success" && (
