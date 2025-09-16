@@ -1,13 +1,16 @@
 "use client";
+import { useGetOwnerInfo } from "@/hooks/userHooks";
+import { User } from "@/interfaces/User";
+import { Chip } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { IoFileTrayOutline } from "react-icons/io5";
-import { FaCheck } from "react-icons/fa6";
 import { LuWarehouse } from "react-icons/lu";
 import { TbInvoice } from "react-icons/tb";
 
 export default function DashboardSidebar() {
+  const { data: info } = useGetOwnerInfo();
   const items = [
     {
       title: "Đơn hàng",
@@ -25,6 +28,13 @@ export default function DashboardSidebar() {
       href: "/dashboard/order/stock",
     },
   ];
+
+  const roleMap: Record<User["role"], string> = {
+    admin: "Admin",
+    accountant: "Kế toán",
+    staff: "Kho",
+  };
+
   return (
     <div className="flex flex-col w-full desktop:h-[850px] max-desktop:h-[640px] px-[12px] py-[20px] justify-between bg-white rounded-[15px] shadow">
       {/* Main */}
@@ -32,6 +42,17 @@ export default function DashboardSidebar() {
         {items.map((item, idx) => {
           return <SidebarItem key={idx} {...item} />;
         })}
+      </div>
+      <div className="flex justify-between items-center px-[10px]">
+        <div className="flex flex-col gap-y-[2px]">
+          <strong className="text-[14px]">{info?.name || "Username"}</strong>
+          <p className="text-[12px] text-black/60">
+            {info?.email || "email@gmail.com"}
+          </p>
+        </div>
+        <Chip size="sm" variant="dot" color="primary">
+          {roleMap[info?.role as string] || "unknown"}
+        </Chip>
       </div>
     </div>
   );
