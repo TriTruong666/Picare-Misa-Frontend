@@ -1,35 +1,71 @@
 "use client";
 
-import { scanBarcodeService } from "@/services/orderService";
-import { showToast } from "@/utils/toast";
+import { useAtom } from "jotai";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useRef, useState, useEffect } from "react";
+import { showToast } from "@/utils/toast";
+import { scanBarcodeService } from "@/services/orderService";
+import { scanDataState } from "@/atoms/service-atoms";
 
 export default function Page() {
-  const [barcode, setBarcode] = useState("");
+  const [isFast, setIsFast] = useState("normal");
+  const [scanData, setScanData] = useAtom(scanDataState);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const sourceMenu = [
+    {
+      title: "Đơn thường",
+      isActive: isFast === "normal",
+      onClick: () => {
+        setIsFast("normal");
+        setScanData({ orderId: "", trackingNumber: "" }); // reset khi đổi nguồn
+      },
+    },
+    {
+      title: "Đơn hoả tốc",
+      isActive: isFast === "fast",
+      onClick: () => {
+        setIsFast("fast");
+        setScanData({ orderId: "", trackingNumber: "" });
+      },
+    },
+  ];
 
   const scanMutation = useMutation({
     mutationKey: ["scan"],
-    mutationFn: scanBarcodeService,
+    mutationFn: ({ isFast, data }: { isFast: string; data: typeof scanData }) =>
+      scanBarcodeService(isFast, data),
     onSuccess(data) {
       if (data.message === "Quét barcode thành công") {
         showToast({
-          content: `Đã cập nhật trạng thái đơn ${data.order?.orderId}`,
+          content: data.message,
           status: "success",
         });
-      } else if (data.message === "Không tìm thấy đơn hàng này") {
-        showToast({
-          content: data.message,
-          status: "danger",
-        });
-      } else if (data.message === "Đơn hàng này đã quét rồi") {
+      }
+      if (data.message === "Đơn này chỉ có thể xuất hoá đơn") {
         showToast({
           content: data.message,
           status: "warning",
         });
       }
-
+      if (data.message === "Đơn này đã được xuất hoá đơn") {
+        showToast({
+          content: data.message,
+          status: "warning",
+        });
+      }
+      if (data.message === "Đơn hàng này đã quét rồi") {
+        showToast({
+          content: data.message,
+          status: "warning",
+        });
+      }
+      if (data.message === "Không tìm thấy đơn hàng này") {
+        showToast({
+          content: data.message,
+          status: "danger",
+        });
+      }
       inputRef.current?.focus();
     },
   });
@@ -42,15 +78,24 @@ export default function Page() {
 
     const handleKeyPress = (e: KeyboardEvent) => {
       const now = Date.now();
-      if (now - lastTime > 100) buffer = ""; // reset buffer nếu quá lâu
+      if (now - lastTime > 100) buffer = "";
       lastTime = now;
 
       if (e.key === "Enter") {
         if (buffer.length > 0) {
-          setBarcode(buffer); // set state
-          scanMutation.mutate({
-            trackingNumber: buffer,
-          }); // gọi API
+          if (isFast === "fast") {
+            setScanData({ orderId: buffer, trackingNumber: "" });
+            scanMutation.mutate({
+              isFast: isFast,
+              data: { orderId: buffer, trackingNumber: "" },
+            });
+          } else {
+            setScanData({ orderId: "", trackingNumber: buffer });
+            scanMutation.mutate({
+              isFast: isFast,
+              data: { orderId: "", trackingNumber: buffer },
+            });
+          }
           buffer = "";
         }
       } else {
@@ -60,7 +105,7 @@ export default function Page() {
 
     window.addEventListener("keypress", handleKeyPress);
     return () => window.removeEventListener("keypress", handleKeyPress);
-  }, [scanMutation]);
+  }, [scanMutation, isFast, setScanData]);
 
   return (
     <div className="relative flex flex-col w-full h-full min-h-full">
@@ -70,12 +115,21 @@ export default function Page() {
             Hệ thống quét barcode
           </h2>
         </div>
+        <div className="">
+          <div className="flex w-fit items-center rounded-full px-[7px] py-[5px] bg-neutral-400/40 gap-x-[5px]">
+            {sourceMenu.map((item, idx) => {
+              return <SourceItem key={idx} {...item} />;
+            })}
+          </div>
+        </div>
         <div className="flex flex-col items-center mt-[180px]">
           <div className="flex flex-col gap-y-[5px]">
             <input
               ref={inputRef}
               type="text"
-              value={barcode}
+              value={
+                isFast === "fast" ? scanData.orderId : scanData.trackingNumber
+              }
               readOnly
               placeholder="Quét Barcode tại đây"
               className="w-[500px] outline-none cursor-not-allowed border border-black/20 px-[14px] py-[9px] rounded-[10px] text-[14px] transition-all duration-300 focus:border-black/50"
@@ -86,6 +140,31 @@ export default function Page() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+type SourceItemProps = {
+  title: string;
+  onClick?(): void;
+  isActive?: boolean;
+};
+
+function SourceItem({ title, onClick, isActive = false }: SourceItemProps) {
+  return (
+    <div
+      onClick={onClick}
+      className={`rounded-full cursor-pointer px-[25px] py-[5px] ${
+        isActive ? "bg-white shadow-2xl" : ""
+      }`}
+    >
+      <p
+        className={`text-[13px] text-center ${
+          isActive ? "text-black font-semibold" : "text-black/70"
+        }`}
+      >
+        {title}
+      </p>
     </div>
   );
 }

@@ -8,5 +8,6 @@ export type Login = {
 }
 
 export type Scan = {
-    trackingNumber: string
+    trackingNumber?: string
+    orderId?: string,
 }

@@ -21,6 +21,7 @@ export type Order = {
   | "pending";
   note: string;
   trackingNumber: string,
+  isSPXFast: string,
   line_items: LineItem[]
 };
 

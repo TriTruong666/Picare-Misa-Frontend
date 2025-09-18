@@ -70,9 +70,9 @@ export const updateStatusOrderService = async (orderId: string, data: UpdateOrde
 }
 
 
-export const scanBarcodeService = async (data: Scan) => {
+export const scanBarcodeService = async (isFast: string, data: Scan) => {
     try {
-        const res = await axiosClient.put(`/orders/scan`, data)
+        const res = await axiosClient.put(`/orders/scan?isSPXFast=${isFast}`, data)
         return res.data
     } catch (error) {
         console.error(error)

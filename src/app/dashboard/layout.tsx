@@ -2,7 +2,7 @@ import { EventAlert } from "@/components/alert";
 import AuthComponent from "@/components/auth";
 import SSEClient from "@/components/client";
 import { SSEHandler } from "@/components/handler";
-import { BlockModal } from "@/components/modal";
+import { BlockModal, ScanModal } from "@/components/modal";
 import Navbar from "@/components/navbar";
 import DashboardSidebar from "@/components/sidebar";
 import { Metadata } from "next";
@@ -23,6 +23,7 @@ export default function Layout({
       <div className="relative flex flex-col font-manrope bg-custom-foreground w-screen h-screen">
         <SSEHandler />
         <BlockModal />
+
         <AuthComponent />
         <EventAlert />
         <SSEClient />

@@ -78,39 +78,41 @@ export default function DashboardSidebar() {
   };
 
   return (
-    <div className="flex flex-col w-full desktop:h-[850px] max-desktop:h-[640px] px-[12px] py-[20px] justify-between bg-white rounded-[15px] shadow">
-      {/* Main */}
-      {info?.role === "admin" && (
-        <div className="flex flex-col gap-y-[15px]">
-          {adminMenu.map((item, idx) => {
-            return <SidebarItem key={idx} {...item} />;
-          })}
+    <div className="relative flex flex-col w-full h-full min-h-full">
+      <div className="flex flex-col w-full h-full px-[12px] py-[20px] justify-between bg-white rounded-[15px] shadow">
+        {/* Main */}
+        {info?.role === "admin" && (
+          <div className="flex flex-col gap-y-[15px]">
+            {adminMenu.map((item, idx) => {
+              return <SidebarItem key={idx} {...item} />;
+            })}
+          </div>
+        )}
+        {info?.role === "staff" && (
+          <div className="flex flex-col gap-y-[15px]">
+            {staffMenu.map((item, idx) => {
+              return <SidebarItem key={idx} {...item} />;
+            })}
+          </div>
+        )}
+        {info?.role === "accountant" && (
+          <div className="flex flex-col gap-y-[15px]">
+            {accountMenu.map((item, idx) => {
+              return <SidebarItem key={idx} {...item} />;
+            })}
+          </div>
+        )}
+        <div className="flex justify-between items-center px-[10px]">
+          <div className="flex flex-col gap-y-[2px]">
+            <strong className="text-[14px]">{info?.name || "Username"}</strong>
+            <p className="text-[12px] text-black/60">
+              {info?.email || "email@gmail.com"}
+            </p>
+          </div>
+          <Chip size="sm" variant="dot" color="primary">
+            {roleMap[info?.role as string] || "unknown"}
+          </Chip>
         </div>
-      )}
-      {info?.role === "staff" && (
-        <div className="flex flex-col gap-y-[15px]">
-          {staffMenu.map((item, idx) => {
-            return <SidebarItem key={idx} {...item} />;
-          })}
-        </div>
-      )}
-      {info?.role === "accountant" && (
-        <div className="flex flex-col gap-y-[15px]">
-          {accountMenu.map((item, idx) => {
-            return <SidebarItem key={idx} {...item} />;
-          })}
-        </div>
-      )}
-      <div className="flex justify-between items-center px-[10px]">
-        <div className="flex flex-col gap-y-[2px]">
-          <strong className="text-[14px]">{info?.name || "Username"}</strong>
-          <p className="text-[12px] text-black/60">
-            {info?.email || "email@gmail.com"}
-          </p>
-        </div>
-        <Chip size="sm" variant="dot" color="primary">
-          {roleMap[info?.role as string] || "unknown"}
-        </Chip>
       </div>
     </div>
   );
