@@ -1,15 +1,21 @@
 "use client";
 
 import { clientDataState } from "@/atoms/client-atoms";
-import { blockModalState, scanModalState } from "@/atoms/modal-atoms";
-import { Modal, ModalContent } from "@heroui/react";
+import {
+  blockModalState,
+  scanModalState,
+  syncModalState,
+} from "@/atoms/modal-atoms";
+import { Button, Modal, ModalContent } from "@heroui/react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { ScanAnimation } from "./animation";
 import { scanDataState } from "@/atoms/service-atoms";
-import { scanBarcodeService } from "@/services/orderService";
-import { useMutation } from "@tanstack/react-query";
+import { scanBarcodeService, syncOrderService } from "@/services/orderService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showToast } from "@/utils/toast";
+import { IoIosInformationCircleOutline } from "react-icons/io";
+import { SyncOrderLoader } from "./loading";
 
 export function BlockModal() {
   const [isToggleModal, setIsToggleModal] = useAtom(blockModalState);
@@ -164,6 +170,99 @@ export function ScanModal({ isFast, currentId }: ScanModalProps) {
           </strong>
           <input ref={inputRef} type="text" readOnly className="hidden" />
         </div>
+      </ModalContent>
+    </Modal>
+  );
+}
+
+export function SyncModal() {
+  const [isToggleModal, setIsToggleModal] = useAtom(syncModalState);
+  const [isLoadingSync, setIsLoadingSync] = useState(false);
+
+  const queryClient = useQueryClient();
+  const syncMutation = useMutation({
+    mutationKey: ["sync-orders"],
+    mutationFn: syncOrderService,
+    onMutate() {
+      setIsLoadingSync(true);
+    },
+    onSuccess(data) {
+      if (data.message === "Đồng bộ thành công") {
+        showToast({
+          content: data.message,
+          status: "success",
+          variant: "flat",
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["orders"],
+        });
+      }
+      setIsLoadingSync(false);
+      setIsToggleModal(false);
+    },
+    onError() {
+      showToast({
+        content: "Quá trình đồng bộ thất bại",
+        description: "Vui lòng kiểm tra internet và thử lại",
+        status: "danger",
+      });
+      setIsToggleModal(false);
+    },
+  });
+
+  const handleSyncOrder = () => {
+    syncMutation.mutate();
+  };
+
+  return (
+    <Modal
+      placement="center"
+      backdrop="opaque"
+      radius="md"
+      shadow="md"
+      size="2xl"
+      hideCloseButton={isLoadingSync}
+      isDismissable={!isLoadingSync}
+      onClose={() => setIsToggleModal(false)}
+      isKeyboardDismissDisabled={true}
+      isOpen={isToggleModal}
+    >
+      <ModalContent>
+        {isLoadingSync ? (
+          <>
+            <div className="flex flex-col !px-[40px] bg-white py-[40px] font-manrope gap-y-[20px]">
+              <SyncOrderLoader />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col !px-[40px] bg-white py-[40px] font-manrope gap-y-[20px]">
+              <h2 className="text-[22px] font-bold text-center">
+                Xác nhận đồng bộ thủ công
+              </h2>
+              <div className="flex items-center gap-x-[10px] px-[10px] py-[20px] bg-yellow-500/20 rounded-[15px]">
+                <IoIosInformationCircleOutline className="text-[30px] text-yellow-600" />
+                <p className="text-sm text-yellow-600">
+                  Quá trình này sẽ mất một khoảng thời gian, bấm{" "}
+                  <span className="font-bold">Xác Nhận</span> sẽ gửi thông báo
+                  cho toàn bộ hệ thống !
+                </p>
+              </div>
+              <div className="flex items-center justify-end">
+                <Button
+                  onPress={handleSyncOrder}
+                  size="md"
+                  variant="flat"
+                  className="w-full bg-black text-black"
+                >
+                  <p className="!text-[14px] text-white font-bold">
+                    Xác Nhận Đồng Bộ
+                  </p>
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </ModalContent>
     </Modal>
   );

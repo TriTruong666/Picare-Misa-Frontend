@@ -46,14 +46,14 @@ export default function Navbar() {
       </Link>
       <div className="flex items-center gap-x-[20px]">
         {/* Search */}
-        <div className="flex px-[15px] py-[7px] bg-white rounded-[8px] items-center gap-x-[10px] transition-all duration-300 border focus-within:border-black/50">
+        {/* <div className="flex px-[15px] py-[7px] bg-white rounded-[8px] items-center gap-x-[10px] transition-all duration-300 border focus-within:border-black/50">
           <IoIosSearch className="text-[18px] text-black/70" />
           <input
             type="text"
             placeholder="Tìm kiếm nhanh"
             className="outline-none bg-transparent text-[13px] w-[300px]"
           />
-        </div>
+        </div> */}
 
         {/* Utils */}
         <div className="flex gap-x-[15px]">

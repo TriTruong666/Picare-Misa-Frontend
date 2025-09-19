@@ -30,8 +30,7 @@ export function EmptyOrder() {
         className="w-[250px] h-[250px]"
       />
       <h1 className="text-[15px] font-normal text-black/70">
-        Không tìm thấy đơn hàng nào, bạn hãy{" "}
-        <span className="font-bold">Đồng bộ dữ liệu</span>
+        Không tìm thấy đơn hàng nào...
       </h1>
     </div>
   );

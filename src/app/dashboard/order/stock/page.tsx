@@ -11,6 +11,7 @@ import { useGetOrderData, useGetOrders } from "@/hooks/orderHooks";
 
 import { TableOrderLoader } from "@/components/loading";
 import { EmptyCompleteOrder } from "@/components/empty";
+import OrderSearchBar from "@/components/searchBar";
 
 export default function Page() {
   const [status] = useState("stock");
@@ -33,7 +34,7 @@ export default function Page() {
             Đơn đã được xử lý
           </h2>
           <div className="flex items-center gap-x-[10px]">
-            <div className="flex items-center gap-x-[7px] px-[15px] py-[7px] shadow-2xl border border-neutral-600/30 rounded-[10px] cursor-pointer">
+            <div className="flex items-center gap-x-[7px] px-[15px] py-[7px] border border-neutral-600/30 rounded-[10px] cursor-pointer">
               <TbFileExport className="text-black/70 text-[15px]" />
               <p className="text-[12px] text-black/70 select-none">
                 Xuất dữ liệu
@@ -42,7 +43,12 @@ export default function Page() {
           </div>
         </div>
         {/* Nav */}
-
+        <div className="flex justify-between items-center">
+          <div className=""></div>
+          <div className="flex items-center">
+            <OrderSearchBar />
+          </div>
+        </div>
         {/* Table */}
         {isLoadingOrder ? (
           <>

@@ -11,10 +11,10 @@ import {
 import { LuClipboardCheck } from "react-icons/lu";
 import { IoSyncOutline } from "react-icons/io5";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Order } from "@/interfaces/Order";
 import { formatPrice, relativeTime } from "@/utils/format";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetOrderData, useGetOrders } from "@/hooks/orderHooks";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -25,6 +25,10 @@ import { showToast } from "@/utils/toast";
 import { SyncOrderLoader, TableOrderLoader } from "@/components/loading";
 import { UpdateOrder } from "@/interfaces/Service";
 import { EmptyOrder } from "@/components/empty";
+import OrderSearchBar from "@/components/searchBar";
+import { SyncModal } from "@/components/modal";
+import { useSetAtom } from "jotai";
+import { syncModalState } from "@/atoms/modal-atoms";
 
 export default function Page() {
   const searchParams = useSearchParams();
@@ -37,7 +41,7 @@ export default function Page() {
   const [status] = useState("pending");
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
-  const [isLoadingSync, setIsLoadingSync] = useState(false);
+  const setIsLoadingSync = useSetAtom(syncModalState);
   const [isUpdating, setIsUpdating] = useState(false);
   const { data: orderData } = useGetOrderData(
     status as string,
@@ -83,31 +87,6 @@ export default function Page() {
   ];
 
   // mutation
-  const syncMutation = useMutation({
-    mutationKey: ["sync-orders"],
-    mutationFn: syncOrderService,
-    onMutate() {
-      setIsLoadingSync(true);
-    },
-    onSuccess(data) {
-      if (data.message === "Đồng bộ thành công") {
-        showToast({
-          content: data.message,
-          status: "success",
-          variant: "flat",
-        });
-        refetch();
-      }
-      setIsLoadingSync(false);
-    },
-    onError() {
-      showToast({
-        content: "Quá trình đồng bộ thất bại",
-        description: "Vui lòng kiểm tra internet và thử lại",
-        status: "danger",
-      });
-    },
-  });
 
   const updateMutation = useMutation({
     mutationKey: ["update-order"],
@@ -163,10 +142,6 @@ export default function Page() {
     );
   };
 
-  const handleSyncOrder = () => {
-    syncMutation.mutate();
-  };
-
   const handleBulkUpdate = async () => {
     try {
       await Promise.all(
@@ -203,152 +178,161 @@ export default function Page() {
     }
   };
 
-  return (
-    <div className="relative flex flex-col w-full min-h-full">
-      {/* Main */}
-      <div className="flex flex-col w-full bg-white rounded-[15px] px-[20px] py-[20px] shadow gap-y-[30px] h-full">
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-[19px] text-black/80">
-            Quản lý đơn sàn
-          </h2>
-          <div className="flex items-center gap-x-[10px]">
-            <div
-              onClick={handleSyncOrder}
-              className="flex items-center gap-x-[7px] px-[15px] py-[7px] shadow-2xl border border-neutral-600/30 rounded-[10px] cursor-pointer"
-            >
-              <IoSyncOutline className="text-black/70 text-[15px]" />
-              <p className="text-[12px] text-black/70 select-none">
-                Đồng bộ dữ liệu
-              </p>
-            </div>
-          </div>
-        </div>
-        {/* Nav */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center rounded-full px-[7px] py-[5px] bg-neutral-400/40 gap-x-[5px]">
-            {items.map((item, idx) => {
-              return (
-                <NavLinkItem
-                  key={idx}
-                  {...item}
-                  onClick={() => {
-                    setPage(1);
-                    setSelectedOrders([]);
-                  }}
-                />
-              );
-            })}
-          </div>
-          <div className="flex items-center">
-            {selectedOrders.length > 0 && (
-              <Dropdown>
-                <DropdownTrigger>
-                  <h2 className="text-sm underline underline-offset-4 cursor-pointer font-bold">
-                    {selectedOrders.length} đã chọn
-                  </h2>
-                </DropdownTrigger>
-                <DropdownMenu>
-                  <DropdownItem
-                    onPress={handleBulkUpdate}
-                    color="success"
-                    variant="flat"
-                    key="check-order"
-                    startContent={<LuClipboardCheck />}
-                  >
-                    <p className="font-manrope">Phân loại và xử lý</p>
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-            )}
-          </div>
-        </div>
-        {/* Table */}
-        {isLoadingSync ? (
-          <>
-            <div className="">
-              <SyncOrderLoader />
-            </div>
-          </>
-        ) : isLoadingOrder ? (
-          <>
-            <div className="">
-              <TableOrderLoader />
-            </div>
-          </>
-        ) : isUpdating ? (
-          <>
-            <div className="">
-              <TableOrderLoader />
-            </div>
-          </>
-        ) : orders.length === 0 ? (
-          <>
-            <div className="">
-              <EmptyOrder />
-            </div>
-          </>
-        ) : (
-          <>
-            <table>
-              <thead>
-                <tr className="border border-black/10 grid grid-cols-12">
-                  <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-3 px-[25px] flex gap-x-[10px] items-center">
-                    <Checkbox
-                      size="sm"
-                      color="primary"
-                      radius="sm"
-                      isSelected={isAllChecked}
-                      onValueChange={handleSelectAll}
-                    />
-                    <p className="text-black/70">Mã đơn hàng</p>
-                  </th>
+  useEffect(() => {
+    if (query) {
+      setPage(1);
+    }
+  }, [query]);
 
-                  <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 max-desktop:col-span-2 desktop:col-span-2 px-[25px]">
-                    Ngày tạo
-                  </th>
-                  <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
-                    Thanh toán
-                  </th>
-                  <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
-                    Giao hàng
-                  </th>
-                  <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 desktop:col-span-1 max-desktop:col-span-2 px-[25px]">
-                    Tổng tiền
-                  </th>
-                  <th className="text-start font-semibold text-[14px] py-[10px] text-black/70 max-desktop:col-span-1 desktop:col-span-2 px-[25px]">
-                    Sàn
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders?.map((order) => {
+  return (
+    <>
+      <SyncModal />
+      <div className="relative flex flex-col w-full min-h-full">
+        {/* Main */}
+        <div className="flex flex-col w-full bg-white rounded-[15px] px-[20px] py-[20px] shadow gap-y-[30px] h-full">
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold text-[19px] text-black/80">
+              Quản lý đơn sàn
+            </h2>
+            <div className="flex items-center gap-x-[10px]">
+              <div
+                onClick={() => setIsLoadingSync(true)}
+                className="flex items-center gap-x-[7px] px-[15px] py-[7px] border border-neutral-600/30 rounded-[10px] cursor-pointer"
+              >
+                <IoSyncOutline className="text-black/70 text-[15px]" />
+                <p className="text-[12px] text-black/70 select-none">
+                  Đồng bộ dữ liệu
+                </p>
+              </div>
+            </div>
+          </div>
+          {/* Nav */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-x-[15px]">
+              <div className="flex items-center rounded-full px-[7px] py-[5px] bg-neutral-400/40 gap-x-[5px]">
+                {items.map((item, idx) => {
                   return (
-                    <OrderItem
-                      checked={selectedOrders.includes(order.orderId)}
-                      onToggle={handleToggleOrder}
-                      key={order.orderId}
-                      {...order}
+                    <NavLinkItem
+                      key={idx}
+                      {...item}
+                      onClick={() => {
+                        setPage(1);
+                        setSelectedOrders([]);
+                      }}
                     />
                   );
                 })}
-              </tbody>
-            </table>
-            <div className="flex">
-              <Pagination
-                isCompact
-                showControls
-                onChange={(value) => {
-                  setPage(value);
-                  setSelectedOrders([]);
-                }}
-                page={page}
-                total={totalPage}
-              />
+              </div>
+              <div className="">
+                {selectedOrders.length > 0 && (
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <h2 className="text-sm underline underline-offset-4 cursor-pointer font-bold">
+                        {selectedOrders.length} đã chọn
+                      </h2>
+                    </DropdownTrigger>
+                    <DropdownMenu>
+                      <DropdownItem
+                        onPress={handleBulkUpdate}
+                        color="success"
+                        variant="flat"
+                        key="check-order"
+                        startContent={<LuClipboardCheck />}
+                      >
+                        <p className="font-manrope">Phân loại và xử lý</p>
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
+                )}
+              </div>
             </div>
-          </>
-        )}
+            {/* Search Order */}
+            <div className="flex items-center">
+              <OrderSearchBar />
+            </div>
+          </div>
+          {/* Table */}
+          {isLoadingOrder ? (
+            <>
+              <div className="">
+                <TableOrderLoader />
+              </div>
+            </>
+          ) : isUpdating ? (
+            <>
+              <div className="">
+                <TableOrderLoader />
+              </div>
+            </>
+          ) : orders.length === 0 ? (
+            <>
+              <div className="">
+                <EmptyOrder />
+              </div>
+            </>
+          ) : (
+            <>
+              <table>
+                <thead>
+                  <tr className="border border-black/10 grid grid-cols-12">
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-3 px-[25px] flex gap-x-[10px] items-center">
+                      <Checkbox
+                        size="sm"
+                        color="primary"
+                        radius="sm"
+                        isSelected={isAllChecked}
+                        onValueChange={handleSelectAll}
+                      />
+                      <p className="text-black/70">Mã đơn hàng</p>
+                    </th>
+
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 max-desktop:col-span-2 desktop:col-span-2 px-[25px]">
+                      Ngày tạo
+                    </th>
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
+                      Thanh toán
+                    </th>
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
+                      Giao hàng
+                    </th>
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 desktop:col-span-1 max-desktop:col-span-2 px-[25px]">
+                      Tổng tiền
+                    </th>
+                    <th className="text-start font-semibold text-[14px] py-[10px] text-black/70 max-desktop:col-span-1 desktop:col-span-2 px-[25px]">
+                      Sàn
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders?.map((order) => {
+                    return (
+                      <OrderItem
+                        checked={selectedOrders.includes(order.orderId)}
+                        onToggle={handleToggleOrder}
+                        key={order.orderId}
+                        {...order}
+                      />
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="flex">
+                <Pagination
+                  isCompact
+                  showControls
+                  onChange={(value) => {
+                    setPage(value);
+                    setSelectedOrders([]);
+                  }}
+                  page={page}
+                  total={totalPage}
+                />
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
