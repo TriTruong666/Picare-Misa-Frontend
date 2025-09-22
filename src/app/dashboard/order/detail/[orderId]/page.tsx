@@ -10,15 +10,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateStatusOrderService } from "@/services/orderService";
 import { UpdateOrder } from "@/interfaces/Service";
 import { showToast } from "@/utils/toast";
-import { useSetAtom } from "jotai";
-import { scanModalState } from "@/atoms/modal-atoms";
-import { ScanModal } from "@/components/modal";
+import { useAtom, useSetAtom } from "jotai";
+import { invoiceModalState, scanModalState } from "@/atoms/modal-atoms";
+import { ConfirmInvoiceModal, ScanModal } from "@/components/modal";
 
 export default function Page() {
   const navigate = useRouter();
   const params = useParams<{ orderId: string }>();
-  const setIsToggleScanModal = useSetAtom(scanModalState);
   const orderId = params.orderId;
+  const setIsToggleScanModal = useSetAtom(scanModalState);
+  const setIsToggleInvoiceModal = useSetAtom(invoiceModalState);
   const { data: detail } = useGetDetailOrder(orderId as string);
   const totalQuantity = (detail?.line_items ?? []).reduce(
     (sum, item) => sum + item.qty,
@@ -84,6 +85,7 @@ export default function Page() {
         isFast={detail?.isSPXFast as string}
         currentId={detail?.orderId as string}
       />
+      <ConfirmInvoiceModal />
       <div className="flex w-full min-h-full gap-x-[30px]">
         {/* Line Items */}
         <div className="relative flex flex-col w-[70%]">
@@ -227,7 +229,7 @@ export default function Page() {
                   ) : (
                     <>
                       <Button
-                        onPress={() => handleUpdateOrderStatus("invoice")}
+                        onPress={() => setIsToggleInvoiceModal(true)}
                         color="success"
                         variant="flat"
                       >

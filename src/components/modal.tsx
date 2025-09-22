@@ -3,6 +3,7 @@
 import { clientDataState } from "@/atoms/client-atoms";
 import {
   blockModalState,
+  invoiceModalState,
   scanModalState,
   syncModalState,
 } from "@/atoms/modal-atoms";
@@ -11,11 +12,17 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { ScanAnimation } from "./animation";
 import { scanDataState } from "@/atoms/service-atoms";
-import { scanBarcodeService, syncOrderService } from "@/services/orderService";
+import {
+  scanBarcodeService,
+  syncOrderService,
+  updateStatusOrderService,
+} from "@/services/orderService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showToast } from "@/utils/toast";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import { SyncOrderLoader } from "./loading";
+import { UpdateOrder } from "@/interfaces/Service";
+import { useParams } from "next/navigation";
 
 export function BlockModal() {
   const [isToggleModal, setIsToggleModal] = useAtom(blockModalState);
@@ -263,6 +270,101 @@ export function SyncModal() {
             </div>
           </>
         )}
+      </ModalContent>
+    </Modal>
+  );
+}
+
+export function ConfirmInvoiceModal() {
+  const [isToggleModal, setIsToggleModal] = useAtom(invoiceModalState);
+  const params = useParams<{ orderId: string }>();
+  const orderId = params.orderId;
+
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationKey: ["update-order"],
+    mutationFn: async ({
+      orderId,
+      data,
+    }: {
+      orderId: string;
+      data: UpdateOrder;
+    }) => updateStatusOrderService(orderId, data),
+
+    onSuccess(data) {
+      queryClient.invalidateQueries({
+        queryKey: ["detail"],
+      });
+      if (data.message === "Cập nhật trạng thái thành công") {
+        showToast({
+          content: "Xử lý đơn thành công",
+          status: "success",
+        });
+      }
+      setIsToggleModal(false);
+    },
+    onError() {
+      showToast({
+        content: "Đã có lỗi xảy ra, vui lòng thử lại",
+        status: "danger",
+      });
+      setIsToggleModal(false);
+    },
+  });
+
+  const handleUpdateOrderStatus = async (status: string) => {
+    try {
+      await updateMutation.mutateAsync({
+        orderId: orderId,
+        data: {
+          status: status,
+        },
+      });
+    } catch (error) {
+      showToast({
+        content: "Có lỗi xảy ra khi cập nhật trạng thái",
+        status: "danger",
+        variant: "flat",
+      });
+    }
+  };
+
+  return (
+    <Modal
+      placement="center"
+      backdrop="opaque"
+      radius="md"
+      shadow="md"
+      size="2xl"
+      onClose={() => setIsToggleModal(false)}
+      isKeyboardDismissDisabled={true}
+      isOpen={isToggleModal}
+    >
+      <ModalContent>
+        <div className="flex flex-col !px-[40px] bg-white py-[40px] font-manrope gap-y-[20px]">
+          <h2 className="text-[22px] font-bold text-center">
+            Xác nhận in hoá đơn
+          </h2>
+          <div className="flex items-center gap-x-[10px] px-[10px] py-[20px] bg-yellow-500/20 rounded-[15px]">
+            <IoIosInformationCircleOutline className="text-[30px] text-yellow-600" />
+            <p className="text-sm text-yellow-600">
+              Quá trình này chỉ nhằm phân loại đơn và chưa ảnh hưởng tới hạch
+              toán của Misa Amis.
+            </p>
+          </div>
+          <div className="flex items-center justify-end">
+            <Button
+              onPress={() => handleUpdateOrderStatus("invoice")}
+              size="md"
+              variant="flat"
+              className="w-full bg-black text-black"
+            >
+              <p className="!text-[14px] text-white font-bold">
+                Xác Nhận In Hoá Đơn
+              </p>
+            </Button>
+          </div>
+        </div>
       </ModalContent>
     </Modal>
   );

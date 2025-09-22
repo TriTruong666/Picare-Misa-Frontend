@@ -3,7 +3,7 @@
 import { Pagination } from "@heroui/react";
 import { TbFileExport } from "react-icons/tb";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Order } from "@/interfaces/Order";
 import { formatPrice, relativeTime } from "@/utils/format";
 import { useState } from "react";
@@ -14,6 +14,8 @@ import { EmptyCompleteOrder } from "@/components/empty";
 import OrderSearchBar from "@/components/searchBar";
 
 export default function Page() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query");
   const [status] = useState("invoice");
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
@@ -22,11 +24,20 @@ export default function Page() {
   const { data: orders = [], isLoading: isLoadingOrder } = useGetOrders(
     page,
     limit,
-    status
+    status,
+    "",
+    "",
+    "",
+    "",
+    query as string
   );
 
   return (
-    <div className="relative flex flex-col w-full min-h-full">
+    <div
+      className={`relative flex flex-col w-full min-h-full ${
+        (orders ?? []).length === 0 && "h-full"
+      }`}
+    >
       {/* Main */}
       <div className="flex flex-col w-full bg-white rounded-[15px] px-[20px] py-[20px] shadow gap-y-[30px] h-full">
         <div className="flex justify-between items-center">

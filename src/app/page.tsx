@@ -19,7 +19,7 @@ export default function Home() {
   });
 
   const loginMutation = useMutation({
-    mutationKey: ["login", loginData.email, loginData.password],
+    mutationKey: ["login"],
     mutationFn: loginService,
     onSuccess(data) {
       if (data.message === "Đăng nhập thành công") {
@@ -108,7 +108,7 @@ export default function Home() {
               onChange={handleOnChange}
               placeholder="Nhập email tại đây"
               id="form-email"
-              className="max-desktop:w-[370px] outline-none border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus:border-black/50"
+              className="w-[450px] outline-none border border-black/20 px-[14px] py-[9px] rounded-[10px] text-[14px] transition-all duration-300 focus:border-black/50"
             />
           </div>
           {/* Password */}
@@ -116,7 +116,7 @@ export default function Home() {
             <label htmlFor="form-email" className="text-sm font-bold">
               Mật khẩu
             </label>
-            <div className="flex justify-between  max-desktop:w-[370px] border border-black/20 px-[14px] py-[9px] rounded-[10px] max-desktop:text-[14px] transition-all duration-300 focus-within:border-black/50">
+            <div className="flex justify-between w-[450px] border border-black/20 px-[14px] py-[9px] rounded-[10px] text-[14px] transition-all duration-300 focus-within:border-black/50">
               <input
                 value={loginData.password}
                 onKeyDown={handleOnEnter}

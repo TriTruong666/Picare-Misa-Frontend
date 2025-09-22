@@ -117,9 +117,7 @@ export default function Page() {
       (o) =>
         o.cancelledStatus !== "cancelled" &&
         o.realCarrierStatus === "success" &&
-        (o.carrierStatus === "delivering" ||
-          o.carrierStatus === "readytopick" ||
-          o.carrierStatus === "delivered")
+        o.carrierStatus === "delivered"
     ) ?? [];
 
   const isAllChecked =
@@ -167,8 +165,8 @@ export default function Page() {
         variant: "flat",
       });
 
-      refetch(); // refresh lại danh sách đơn
-      setSelectedOrders([]); // clear các đơn đã chọn
+      refetch();
+      setSelectedOrders([]);
     } catch (error) {
       showToast({
         content: "Có lỗi xảy ra khi cập nhật trạng thái",
@@ -187,7 +185,11 @@ export default function Page() {
   return (
     <>
       <SyncModal />
-      <div className="relative flex flex-col w-full min-h-full">
+      <div
+        className={`relative flex flex-col w-full min-h-full ${
+          (orders ?? []).length === 0 && "h-full"
+        }`}
+      >
         {/* Main */}
         <div className="flex flex-col w-full bg-white rounded-[15px] px-[20px] py-[20px] shadow gap-y-[30px] h-full">
           <div className="flex justify-between items-center">
@@ -239,7 +241,9 @@ export default function Page() {
                         key="check-order"
                         startContent={<LuClipboardCheck />}
                       >
-                        <p className="font-manrope">Phân loại và xử lý</p>
+                        <p className="font-manrope">
+                          Xử lý in hoá đơn hàng loạt
+                        </p>
                       </DropdownItem>
                     </DropdownMenu>
                   </Dropdown>
@@ -295,10 +299,10 @@ export default function Page() {
                     <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
                       Giao hàng
                     </th>
-                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 desktop:col-span-1 max-desktop:col-span-2 px-[25px]">
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 desktop:col-span-2 max-desktop:col-span-2 px-[25px]">
                       Tổng tiền
                     </th>
-                    <th className="text-start font-semibold text-[14px] py-[10px] text-black/70 max-desktop:col-span-1 desktop:col-span-2 px-[25px]">
+                    <th className="text-start font-semibold text-[14px] py-[10px] text-black/70 max-desktop:col-span-1 desktop:col-span-1 px-[25px]">
                       Sàn
                     </th>
                   </tr>
@@ -394,26 +398,6 @@ function OrderItem({
       }`}
     >
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px] flex gap-x-[10px] items-center">
-        {carrierStatus === "readytopick" && realCarrierStatus === "success" && (
-          <Checkbox
-            size="sm"
-            color={isCancelled ? "default" : "primary"}
-            radius="sm"
-            isDisabled={isCancelled}
-            isSelected={checked}
-            onValueChange={(value) => onToggle(orderId, value)}
-          />
-        )}
-        {carrierStatus === "delivering" && realCarrierStatus === "success" && (
-          <Checkbox
-            size="sm"
-            color={isCancelled ? "default" : "primary"}
-            radius="sm"
-            isDisabled={isCancelled}
-            isSelected={checked}
-            onValueChange={(value) => onToggle(orderId, value)}
-          />
-        )}
         {carrierStatus === "delivered" && realCarrierStatus === "success" && (
           <Checkbox
             size="sm"
@@ -478,10 +462,10 @@ function OrderItem({
           </>
         )}
       </td>
-      <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] desktop:col-span-1 max-desktop:col-span-2 px-[25px] flex items-center">
+      <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] desktop:col-span-2 max-desktop:col-span-2 px-[25px] flex items-center">
         {formatPrice(totalPrice)}
       </td>
-      <td className="text-start font-semibold text-[14px] py-[13px] max-desktop:col-span-1 desktop:col-span-2 px-[25px] flex items-center">
+      <td className="text-start font-semibold text-[14px] py-[13px] max-desktop:col-span-1 desktop:col-span-1 px-[25px] flex items-center">
         {source}
       </td>
     </tr>
