@@ -28,7 +28,7 @@ export default function SettingNavlinkMenu() {
     },
   ];
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full ">
       {menu.map((item, idx) => (
         <NavlinkItem key={idx} {...item} />
       ))}
@@ -54,12 +54,12 @@ function NavlinkItem({ title, href, allowedRoles }: NavlinkItemProps) {
   return (
     <Link
       href={href}
-      className="group relative flex items-center px-[10px] py-[10px] w-[160px] overflow-hidden"
+      className="group relative flex items-center px-[10px] py-[10px] max-desktop:w-[190px] desktop:w-[250px] overflow-hidden"
     >
       {/* Nền trượt */}
       <span
         className={`absolute left-0 bottom-0 h-full w-0 bg-black transition-all duration-500 ease-in-out group-hover:w-full ${
-          isActive ? "bg-custom-primary w-full" : ""
+          isActive ? "bg-black w-full" : ""
         }`}
       ></span>
 

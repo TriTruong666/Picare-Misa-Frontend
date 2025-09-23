@@ -1,5 +1,9 @@
-
-
 export type MisaConfig = {
-    accessToken: string
-}
+  accessToken: string;
+};
+
+export type MisaDataCount = {
+  customers: number;
+  products: number;
+  stocks: number;
+};
