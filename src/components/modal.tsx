@@ -3,6 +3,7 @@
 import { clientDataState } from "@/atoms/client-atoms";
 import {
   blockModalState,
+  buildDocumentModalState,
   invoiceModalState,
   scanModalState,
   syncModalState,
@@ -23,6 +24,7 @@ import { IoIosInformationCircleOutline } from "react-icons/io";
 import { SyncOrderLoader } from "./loading";
 import { UpdateOrder } from "@/interfaces/Service";
 import { useParams } from "next/navigation";
+import { buildOrderService } from "@/services/misaService";
 
 export function BlockModal() {
   const [isToggleModal, setIsToggleModal] = useAtom(blockModalState);
@@ -348,8 +350,8 @@ export function ConfirmInvoiceModal() {
           <div className="flex items-center gap-x-[10px] px-[10px] py-[20px] bg-yellow-500/20 rounded-[15px]">
             <IoIosInformationCircleOutline className="text-[30px] text-yellow-600" />
             <p className="text-sm text-yellow-600">
-              Quá trình này chỉ nhằm phân loại đơn và chưa ảnh hưởng tới hạch
-              toán của Misa Amis.
+              Quá trình này chỉ nhằm phân loại đơn và chưa ảnh hưởng tới việc
+              xin chứng từ của Misa Amis
             </p>
           </div>
           <div className="flex items-center justify-end">
@@ -361,6 +363,114 @@ export function ConfirmInvoiceModal() {
             >
               <p className="!text-[14px] text-white font-bold">
                 Xác Nhận In Hoá Đơn
+              </p>
+            </Button>
+          </div>
+        </div>
+      </ModalContent>
+    </Modal>
+  );
+}
+
+export function BuildMisaDocumentModal() {
+  const params = useParams<{ orderId: string }>();
+  const orderId = params.orderId;
+  const [isToggleModal, setIsToggleModal] = useAtom(buildDocumentModalState);
+
+  const queryClient = useQueryClient();
+  const updateMutation = useMutation({
+    mutationKey: ["update-order"],
+    mutationFn: async ({
+      orderId,
+      data,
+    }: {
+      orderId: string;
+      data: UpdateOrder;
+    }) => updateStatusOrderService(orderId, data),
+
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["detail"],
+      });
+      setIsToggleModal(false);
+    },
+    onError() {
+      showToast({
+        content: "Đã có lỗi xảy ra, vui lòng thử lại",
+        status: "danger",
+      });
+      setIsToggleModal(false);
+    },
+  });
+
+  const buildMutation = useMutation({
+    mutationKey: ["document", orderId],
+    mutationFn: buildOrderService,
+    onSuccess(data) {
+      if (data.message === "Đẩy đơn hàng sang MISA thành công") {
+        showToast({
+          content:
+            "Xin chứng từ thành công, vui lòng đợi kết quả tại Misa Amis",
+          status: "success",
+        });
+        updateMutation.mutate({
+          data: {
+            status: "completed",
+          },
+          orderId: orderId,
+        });
+      }
+      setIsToggleModal(false);
+    },
+
+    onError() {
+      showToast({
+        content: "Đã có lỗi xảy ra, vui lòng thử lại",
+        status: "danger",
+      });
+      setIsToggleModal(false);
+    },
+  });
+
+  const handleBuildDocument = () => {
+    buildMutation.mutate({
+      orderId: orderId,
+    });
+  };
+
+  return (
+    <Modal
+      placement="center"
+      backdrop="opaque"
+      radius="md"
+      shadow="md"
+      size="2xl"
+      onClose={() => setIsToggleModal(false)}
+      isKeyboardDismissDisabled={true}
+      isOpen={isToggleModal}
+    >
+      <ModalContent>
+        <div className="flex flex-col !px-[40px] bg-white py-[40px] font-manrope gap-y-[20px]">
+          <h2 className="text-[22px] font-bold text-center">
+            Xin chứng từ hoá đơn bán hàng
+          </h2>
+          <div className="flex items-center gap-x-[10px] px-[10px] py-[20px] bg-red-500/20 rounded-[15px]">
+            <IoIosInformationCircleOutline className="text-[30px] text-red-600" />
+            <p className="text-sm text-red-600">
+              Quá trình này sẽ đẩy đơn hàng này lên{" "}
+              <span className="font-bold">Misa Amis để xin chứng từ</span>. Vui
+              lòng kiểm tra kỹ trước khi lên đơn !!!
+            </p>
+          </div>
+          <div className="flex items-center justify-end">
+            <Button
+              onPress={handleBuildDocument}
+              size="md"
+              variant="flat"
+              className="w-full bg-black text-black"
+            >
+              <p className="!text-[14px] text-white font-bold">
+                Xác Nhận Xin Chứng Từ
               </p>
             </Button>
           </div>

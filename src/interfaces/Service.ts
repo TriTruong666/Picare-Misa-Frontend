@@ -11,3 +11,7 @@ export type Scan = {
     trackingNumber?: string
     orderId?: string,
 }
+
+export type BuildOrder = {
+    orderId: string,
+}

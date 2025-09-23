@@ -8,7 +8,7 @@ import {
   DropdownTrigger,
 } from "@heroui/react";
 import Image from "next/image";
-import { IoIosSearch } from "react-icons/io";
+import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import { FiUserCheck } from "react-icons/fi";
 import { GoBell } from "react-icons/go";
 import { AiOutlineLogout } from "react-icons/ai";
@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { logoutService } from "@/services/authService";
 import { handleGoToRoute } from "@/utils/navigate";
+import { useGetOwnerInfo } from "@/hooks/userHooks";
 
 export default function Navbar() {
   const logoutMutation = useMutation({
@@ -33,6 +34,7 @@ export default function Navbar() {
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
   return (
     <div className="flex justify-between items-center">
       <Link href={`/dashboard/order`}>
@@ -70,16 +72,23 @@ export default function Navbar() {
                 <RiSettingsLine className="text-[20px] text-black/70" />
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Static Actions">
+            <DropdownMenu aria-label="Static">
               <DropdownItem
-                href="/"
-                key="setting"
+                href="/dashboard/setting/profile"
+                key="setting-profile"
                 startContent={<FiUserCheck />}
               >
                 <p className="font-manrope">Tài khoản</p>
               </DropdownItem>
               <DropdownItem
-                href="/"
+                href="/dashboard/setting"
+                key="setting"
+                startContent={<HiOutlineCog6Tooth />}
+              >
+                <p className="font-manrope">Cài đặt</p>
+              </DropdownItem>
+              <DropdownItem
+                href="/dashboard/help"
                 key="help"
                 startContent={<IoHelpOutline />}
               >

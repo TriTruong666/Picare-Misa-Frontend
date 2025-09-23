@@ -13,7 +13,7 @@ import { TbInvoice } from "react-icons/tb";
 export default function DashboardSidebar() {
   const { data: info } = useGetOwnerInfo();
 
-  const adminMenu = [
+  const userMenu = [
     {
       title: "Đơn hàng",
       icon: IoFileTrayOutline,
@@ -23,51 +23,19 @@ export default function DashboardSidebar() {
       title: "Xuất hoá đơn",
       icon: TbInvoice,
       href: "/dashboard/order/invoice",
+      allowedRoles: ["admin", "accountant"],
     },
     {
       title: "Xuất kho",
       icon: LuWarehouse,
       href: "/dashboard/order/stock",
+      allowedRoles: ["admin", "stock"],
     },
     {
       title: "Quét Barcode",
       icon: AiOutlineScan,
       href: "/dashboard/scan",
-    },
-  ];
-  const staffMenu = [
-    {
-      title: "Đơn hàng",
-      icon: IoFileTrayOutline,
-      href: "/dashboard/order",
-    },
-    {
-      title: "Xuất kho",
-      icon: LuWarehouse,
-      href: "/dashboard/order/stock",
-    },
-    {
-      title: "Quét Barcode",
-      icon: AiOutlineScan,
-      href: "/dashboard/scan",
-    },
-  ];
-
-  const accountMenu = [
-    {
-      title: "Đơn hàng",
-      icon: IoFileTrayOutline,
-      href: "/dashboard/order",
-    },
-    {
-      title: "Xuất hoá đơn",
-      icon: TbInvoice,
-      href: "/dashboard/order/invoice",
-    },
-    {
-      title: "Quét Barcode",
-      icon: AiOutlineScan,
-      href: "/dashboard/scan",
+      allowedRoles: ["admin", "stock"],
     },
   ];
 
@@ -81,27 +49,11 @@ export default function DashboardSidebar() {
     <div className="relative flex flex-col w-full h-full min-h-full">
       <div className="flex flex-col w-full h-full px-[12px] py-[20px] justify-between bg-white rounded-[15px] shadow">
         {/* Main */}
-        {info?.role === "admin" && (
-          <div className="flex flex-col gap-y-[15px]">
-            {adminMenu.map((item, idx) => {
-              return <SidebarItem key={idx} {...item} />;
-            })}
-          </div>
-        )}
-        {info?.role === "staff" && (
-          <div className="flex flex-col gap-y-[15px]">
-            {staffMenu.map((item, idx) => {
-              return <SidebarItem key={idx} {...item} />;
-            })}
-          </div>
-        )}
-        {info?.role === "accountant" && (
-          <div className="flex flex-col gap-y-[15px]">
-            {accountMenu.map((item, idx) => {
-              return <SidebarItem key={idx} {...item} />;
-            })}
-          </div>
-        )}
+        <div className="flex flex-col gap-y-[15px]">
+          {userMenu.map((item, idx) => {
+            return <SidebarItem key={idx} {...item} />;
+          })}
+        </div>
         <div className="flex justify-between items-center px-[10px]">
           <div className="flex flex-col gap-y-[2px]">
             <strong className="text-[14px]">{info?.name || "Username"}</strong>
@@ -122,11 +74,22 @@ type SidebarItemProps = {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
+  allowedRoles?: string[];
 };
 
-function SidebarItem({ title, icon: Icon, href }: SidebarItemProps) {
+function SidebarItem({
+  title,
+  icon: Icon,
+  href,
+  allowedRoles,
+}: SidebarItemProps) {
   const pathName = usePathname();
   const isActive = pathName === href;
+  const { data: info } = useGetOwnerInfo();
+
+  if (allowedRoles && !allowedRoles.some((r) => info?.role.includes(r))) {
+    return null;
+  }
 
   return (
     <Link

@@ -14,6 +14,7 @@ export function EventAlert() {
   return (
     <div className="">
       <Alert
+        radius="none"
         title={eventData.message}
         variant="flat"
         color="default"

@@ -6,13 +6,17 @@ import { Button, Chip } from "@heroui/react";
 import { useParams, useRouter } from "next/navigation";
 import { formatDateAndTime, formatPrice } from "@/utils/format";
 import { Order } from "@/interfaces/Order";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateStatusOrderService } from "@/services/orderService";
-import { UpdateOrder } from "@/interfaces/Service";
-import { showToast } from "@/utils/toast";
-import { useAtom, useSetAtom } from "jotai";
-import { invoiceModalState, scanModalState } from "@/atoms/modal-atoms";
-import { ConfirmInvoiceModal, ScanModal } from "@/components/modal";
+import { useSetAtom } from "jotai";
+import {
+  buildDocumentModalState,
+  invoiceModalState,
+  scanModalState,
+} from "@/atoms/modal-atoms";
+import {
+  BuildMisaDocumentModal,
+  ConfirmInvoiceModal,
+  ScanModal,
+} from "@/components/modal";
 
 export default function Page() {
   const navigate = useRouter();
@@ -20,62 +24,24 @@ export default function Page() {
   const orderId = params.orderId;
   const setIsToggleScanModal = useSetAtom(scanModalState);
   const setIsToggleInvoiceModal = useSetAtom(invoiceModalState);
+  const setIsToggleMisaDocumentModal = useSetAtom(buildDocumentModalState);
   const { data: detail } = useGetDetailOrder(orderId as string);
   const totalQuantity = (detail?.line_items ?? []).reduce(
     (sum, item) => sum + item.qty,
     0
   );
 
-  const queryClient = useQueryClient();
-  const updateMutation = useMutation({
-    mutationKey: ["update-order"],
-    mutationFn: async ({
-      orderId,
-      data,
-    }: {
-      orderId: string;
-      data: UpdateOrder;
-    }) => updateStatusOrderService(orderId, data),
-
-    onSuccess() {
-      queryClient.invalidateQueries({
-        queryKey: ["detail"],
-      });
-    },
-    onError() {
-      showToast({
-        content: "Đã có lỗi xảy ra, vui lòng thử lại",
-        status: "danger",
-      });
-    },
-  });
-
-  const handleUpdateOrderStatus = async (status: string) => {
-    try {
-      await updateMutation.mutateAsync({
-        orderId: orderId,
-        data: {
-          status: status,
-        },
-      });
-    } catch (error) {
-      showToast({
-        content: "Có lỗi xảy ra khi cập nhật trạng thái",
-        status: "danger",
-        variant: "flat",
-      });
-    }
-  };
-
   const statusMap: Record<Order["status"], string> = {
     pending: "Chờ xử lý",
     invoice: "Đã xử lý hoá đơn",
     stock: "Đã xử lý kho",
+    completed: "Hoàn thành đơn",
   };
 
   const statusClassMap: Record<Order["status"], string> = {
     pending: "bg-neutral-600/30 text-black/70",
     invoice: "bg-success-400/50 text-success-600",
+    completed: "bg-success-400/50 text-success-600",
     stock: "bg-warning-400/50 text-warning-700",
   };
 
@@ -86,6 +52,7 @@ export default function Page() {
         currentId={detail?.orderId as string}
       />
       <ConfirmInvoiceModal />
+      <BuildMisaDocumentModal />
       <div className="flex w-full min-h-full gap-x-[30px]">
         {/* Line Items */}
         <div className="relative flex flex-col w-[70%]">
@@ -225,6 +192,16 @@ export default function Page() {
               detail?.realCarrierStatus === "success" && (
                 <>
                   {detail.status === "invoice" ? (
+                    <>
+                      <Button
+                        onPress={() => setIsToggleMisaDocumentModal(true)}
+                        color="success"
+                        variant="flat"
+                      >
+                        Xin chứng từ
+                      </Button>
+                    </>
+                  ) : detail.status === "completed" ? (
                     <></>
                   ) : (
                     <>

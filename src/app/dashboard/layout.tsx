@@ -23,7 +23,6 @@ export default function Layout({
       <div className="relative flex flex-col font-manrope bg-custom-foreground w-screen h-screen">
         <SSEHandler />
         <BlockModal />
-
         <AuthComponent />
         <EventAlert />
         <SSEClient />

@@ -18,7 +18,8 @@ export type Order = {
   status:
   | "invoice"
   | "stock"
-  | "pending";
+  | "pending"
+  | "completed";
   note: string;
   trackingNumber: string,
   isSPXFast: string,
