@@ -14,7 +14,7 @@ export default function Layout({
 }>) {
   return (
     <Suspense>
-      <div className="relative flex flex-col w-full h-full min-h-full">
+      <div className="relative flex flex-col w-full min-h-full">
         <div className="flex flex-col w-full bg-white rounded-[15px] px-[20px] py-[20px] shadow gap-y-[30px] h-full">
           <div className="flex justify-between items-center">
             <h2 className="font-semibold text-[19px] text-black/80">Cài đặt</h2>

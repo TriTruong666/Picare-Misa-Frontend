@@ -15,3 +15,8 @@ export type Scan = {
 export type BuildOrder = {
     orderId: string,
 }
+
+export type PostActivity = {
+    userId?: string,
+    type: string
+}

@@ -1,6 +1,7 @@
 "use client";
 import { useGetOwnerInfo } from "@/hooks/userHooks";
 import { Login } from "@/interfaces/Service";
+import { postActivityLogService } from "@/services/activityService";
 import { loginService } from "@/services/authService";
 import { handleGoToRoute } from "@/utils/navigate";
 import { Button } from "@heroui/react";
@@ -9,13 +10,18 @@ import Image from "next/image";
 import { ChangeEvent, useEffect, useState } from "react";
 import { RxEyeOpen, RxEyeClosed } from "react-icons/rx";
 
-export default function Home() {
+export default function Page() {
   const { data: info, isLoading: isGetUserInfo } = useGetOwnerInfo();
   const [validateError, setValidateError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState<Login>({
     email: "",
     password: "",
+  });
+
+  const activityLogMutation = useMutation({
+    mutationKey: ["log"],
+    mutationFn: postActivityLogService,
   });
 
   const loginMutation = useMutation({
@@ -31,6 +37,9 @@ export default function Home() {
           password: "",
         });
         setValidateError(data.message);
+        activityLogMutation.mutate({
+          type: "try-login",
+        });
       }
     },
   });

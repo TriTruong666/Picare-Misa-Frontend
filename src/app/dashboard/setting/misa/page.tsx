@@ -16,7 +16,6 @@ import {
   IoRefreshOutline,
   IoSyncOutline,
 } from "react-icons/io5";
-import { GrConnect } from "react-icons/gr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   connectMisaService,
@@ -24,9 +23,10 @@ import {
 } from "@/services/misaService";
 import { showToast } from "@/utils/toast";
 import { useState } from "react";
+import { SyncMisaLoader } from "@/components/loading";
 
 export default function Page() {
-  const { data: config } = useGetMisaConfig();
+  const { data: config, isLoading: isLoadingConfig } = useGetMisaConfig();
   const [isLoadingSync, setIsLoadingSync] = useState(false);
 
   const queryClient = useQueryClient();
@@ -35,10 +35,6 @@ export default function Page() {
     mutationFn: connectMisaService,
     onSuccess(data) {
       if (data.message === "Kết nối thành công tới Misa Amis") {
-        showToast({
-          content: "Tạo token thành công",
-          status: "success",
-        });
         queryClient.invalidateQueries({
           queryKey: ["misa-config"],
         });
@@ -55,19 +51,21 @@ export default function Page() {
     onSuccess(data) {
       if (data.message === "Đồng bộ tất cả dữ liệu MISA thành công") {
         showToast({
-          content: data.message,
+          content: "Khởi tạo kết nối tới Misa Amis thành công",
           status: "success",
         });
         queryClient.invalidateQueries({
           queryKey: ["misa-data-count"],
         });
       }
+      setIsLoadingSync(true);
     },
     onError() {
       showToast({
         content: "Đồng bộ dữ liệu thất bại, vui lòng thử lại",
         status: "danger",
       });
+      setIsLoadingSync(true);
     },
   });
 
@@ -80,16 +78,24 @@ export default function Page() {
   };
 
   const handleFirstTimeInitMisa = async () => {
-    await connectMutation.mutate();
+    connectMutation.mutate();
 
     setTimeout(async () => {
-      await syncAllMisaDataMutation.mutate();
+      syncAllMisaDataMutation.mutate();
     }, 1000);
   };
 
   return (
     <div className="flex flex-col w-full">
-      {!config?.accessToken ? (
+      {isLoadingConfig ? (
+        <>
+          <SyncMisaLoader />
+        </>
+      ) : isLoadingSync ? (
+        <>
+          <SyncMisaLoader />
+        </>
+      ) : !config?.accessToken ? (
         <>
           <div className="flex flex-col gap-y-[10px] desktop:h-[600px] max-desktop:h-[400px] items-center justify-center">
             <Button
@@ -125,6 +131,7 @@ export default function Page() {
                     variant="flat"
                   >
                     <DropdownItem
+                      onPress={handleMisaConnect}
                       color="primary"
                       key="connect"
                       startContent={<IoRefreshOutline />}
@@ -132,6 +139,7 @@ export default function Page() {
                       Tạo mới token
                     </DropdownItem>
                     <DropdownItem
+                      onPress={handleSyncAllMisaData}
                       color="primary"
                       key="sync"
                       startContent={<IoSyncOutline />}

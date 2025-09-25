@@ -20,7 +20,10 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
   const { data: orderData } = useGetOrderData(status);
-  const totalPage = Math.ceil((orderData?.count as number) / limit);
+  const totalPage = Math.max(
+    1,
+    Math.ceil(((orderData?.count as number) || 0) / limit)
+  );
   const { data: orders = [], isLoading: isLoadingOrder } = useGetOrders(
     page,
     limit,
@@ -105,17 +108,19 @@ export default function Page() {
                 })}
               </tbody>
             </table>
-            <div className="flex">
-              <Pagination
-                isCompact
-                showControls
-                onChange={(value) => {
-                  setPage(value);
-                }}
-                initialPage={page}
-                total={totalPage}
-              />
-            </div>
+            {(orders ?? []).length > 0 && (
+              <div className="flex">
+                <Pagination
+                  isCompact
+                  showControls
+                  onChange={(value) => {
+                    setPage(value);
+                  }}
+                  initialPage={page}
+                  total={totalPage}
+                />
+              </div>
+            )}
           </>
         )}
       </div>

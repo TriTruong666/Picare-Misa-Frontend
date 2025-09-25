@@ -51,7 +51,10 @@ export default function Page() {
     source as string,
     query as string
   );
-  const totalPage = Math.ceil((orderData?.count as number) / limit);
+  const totalPage = Math.max(
+    1,
+    Math.ceil(((orderData?.count as number) || 0) / limit)
+  );
   const {
     data: orders = [],
     isLoading: isLoadingOrder,
@@ -320,18 +323,20 @@ export default function Page() {
                   })}
                 </tbody>
               </table>
-              <div className="flex">
-                <Pagination
-                  isCompact
-                  showControls
-                  onChange={(value) => {
-                    setPage(value);
-                    setSelectedOrders([]);
-                  }}
-                  page={page}
-                  total={totalPage}
-                />
-              </div>
+              {(orders ?? []).length > 0 && (
+                <div className="flex">
+                  <Pagination
+                    isCompact
+                    showControls
+                    onChange={(value) => {
+                      setPage(value);
+                      setSelectedOrders([]);
+                    }}
+                    page={page}
+                    total={totalPage}
+                  />
+                </div>
+              )}
             </>
           )}
         </div>

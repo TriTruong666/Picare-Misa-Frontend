@@ -26,6 +26,10 @@ export default function SettingNavlinkMenu() {
       title: "Misa Amis",
       href: "/dashboard/setting/misa",
     },
+    {
+      title: "Hoạt động",
+      href: "/dashboard/setting/activity",
+    },
   ];
   return (
     <div className="flex flex-col h-full ">

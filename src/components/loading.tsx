@@ -34,3 +34,16 @@ export function TableOrderLoader() {
     </div>
   );
 }
+
+export function SyncMisaLoader() {
+  return (
+    <div className="w-full desktop:h-[600px] max-desktop:h-[450px] flex flex-col justify-center items-center gap-y-[15px]">
+      <DynamicLottie
+        animationData={tableLoading}
+        loop
+        autoplay
+        className="w-[200px] h-[200px]"
+      />
+    </div>
+  );
+}
