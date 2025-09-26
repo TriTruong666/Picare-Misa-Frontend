@@ -25,6 +25,8 @@ import { SyncOrderLoader } from "./loading";
 import { UpdateOrder } from "@/interfaces/Service";
 import { useParams } from "next/navigation";
 import { buildOrderService } from "@/services/misaService";
+import { useGetOwnerInfo } from "@/hooks/userHooks";
+import { postActivityLogService } from "@/services/activityService";
 
 export function BlockModal() {
   const [isToggleModal, setIsToggleModal] = useAtom(blockModalState);
@@ -70,9 +72,21 @@ type ScanModalProps = {
 };
 
 export function ScanModal({ isFast, currentId }: ScanModalProps) {
+  const { data: info } = useGetOwnerInfo();
   const [isToggleModal, setIsToggleModal] = useAtom(scanModalState);
   const [scanData, setScanData] = useAtom(scanDataState);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const queryClient = useQueryClient();
+  const activityLogMutation = useMutation({
+    mutationKey: ["log"],
+    mutationFn: postActivityLogService,
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["activity-log"],
+      });
+    },
+  });
 
   const scanMutation = useMutation({
     mutationKey: ["scan"],
@@ -83,6 +97,11 @@ export function ScanModal({ isFast, currentId }: ScanModalProps) {
         showToast({
           content: data.message,
           status: "success",
+        });
+        activityLogMutation.mutate({
+          type: "stock",
+          userId: info?.userId,
+          note: currentId,
         });
       }
       if (data.message === "Đơn này chỉ có thể xuất hoá đơn") {
@@ -278,11 +297,22 @@ export function SyncModal() {
 }
 
 export function ConfirmInvoiceModal() {
+  const { data: info } = useGetOwnerInfo();
   const [isToggleModal, setIsToggleModal] = useAtom(invoiceModalState);
   const params = useParams<{ orderId: string }>();
   const orderId = params.orderId;
 
   const queryClient = useQueryClient();
+
+  const activityLogMutation = useMutation({
+    mutationKey: ["log"],
+    mutationFn: postActivityLogService,
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["activity-log"],
+      });
+    },
+  });
   const updateMutation = useMutation({
     mutationKey: ["update-order"],
     mutationFn: async ({
@@ -293,7 +323,7 @@ export function ConfirmInvoiceModal() {
       data: UpdateOrder;
     }) => updateStatusOrderService(orderId, data),
 
-    onSuccess(data) {
+    onSuccess(data, variables) {
       queryClient.invalidateQueries({
         queryKey: ["detail"],
       });
@@ -301,6 +331,11 @@ export function ConfirmInvoiceModal() {
         showToast({
           content: "Xử lý đơn thành công",
           status: "success",
+        });
+        activityLogMutation.mutate({
+          type: "confirm",
+          note: variables.orderId,
+          userId: info?.userId,
         });
       }
       setIsToggleModal(false);

@@ -58,14 +58,14 @@ export default function Page() {
           queryKey: ["misa-data-count"],
         });
       }
-      setIsLoadingSync(true);
+      setIsLoadingSync(false);
     },
     onError() {
       showToast({
         content: "Đồng bộ dữ liệu thất bại, vui lòng thử lại",
         status: "danger",
       });
-      setIsLoadingSync(true);
+      setIsLoadingSync(false);
     },
   });
 

@@ -5,13 +5,15 @@ import { postActivityLogService } from "@/services/activityService";
 import { loginService } from "@/services/authService";
 import { handleGoToRoute } from "@/utils/navigate";
 import { Button } from "@heroui/react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { ChangeEvent, useEffect, useState } from "react";
 import { RxEyeOpen, RxEyeClosed } from "react-icons/rx";
 
 export default function Page() {
   const { data: info, isLoading: isGetUserInfo } = useGetOwnerInfo();
+  const [storedName, setStoredName] = useState<string | null>(null);
+
   const [validateError, setValidateError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState<Login>({
@@ -19,9 +21,15 @@ export default function Page() {
     password: "",
   });
 
+  const queryClient = useQueryClient();
   const activityLogMutation = useMutation({
     mutationKey: ["log"],
     mutationFn: postActivityLogService,
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["activity-log"],
+      });
+    },
   });
 
   const loginMutation = useMutation({
@@ -76,6 +84,12 @@ export default function Page() {
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setStoredName(localStorage.getItem("storedName"));
+    }
+  }, []);
+
+  useEffect(() => {
     if (isGetUserInfo) return;
     if (info) {
       handleGoToRoute("/dashboard/order");
@@ -96,7 +110,7 @@ export default function Page() {
       <div className="flex flex-col">
         <div className="flex flex-col items-center gap-y-[9px]">
           <h2 className="font-semibold text-[22px] text-black/80">
-            Chào mừng bạn quay trở lại
+            {storedName ? `Hello, ${storedName}` : "Chào mừng bạn quay trở lại"}
           </h2>
           <p className="text-black/60 text-[15px]">
             Vui lòng nhập email và mật khẩu để tiếp tục

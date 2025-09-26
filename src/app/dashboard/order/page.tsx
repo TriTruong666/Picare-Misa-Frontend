@@ -11,26 +11,26 @@ import {
 import { LuClipboardCheck } from "react-icons/lu";
 import { IoSyncOutline } from "react-icons/io5";
 import Link from "next/link";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Order } from "@/interfaces/Order";
 import { formatPrice, relativeTime } from "@/utils/format";
 import { useEffect, useState } from "react";
 import { useGetOrderData, useGetOrders } from "@/hooks/orderHooks";
-import { useMutation } from "@tanstack/react-query";
-import {
-  syncOrderService,
-  updateStatusOrderService,
-} from "@/services/orderService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateStatusOrderService } from "@/services/orderService";
 import { showToast } from "@/utils/toast";
-import { SyncOrderLoader, TableOrderLoader } from "@/components/loading";
+import { TableOrderLoader } from "@/components/loading";
 import { UpdateOrder } from "@/interfaces/Service";
 import { EmptyOrder } from "@/components/empty";
 import OrderSearchBar from "@/components/searchBar";
 import { SyncModal } from "@/components/modal";
 import { useSetAtom } from "jotai";
 import { syncModalState } from "@/atoms/modal-atoms";
+import { useGetOwnerInfo } from "@/hooks/userHooks";
+import { postActivityLogService } from "@/services/activityService";
 
 export default function Page() {
+  const { data: info } = useGetOwnerInfo();
   const searchParams = useSearchParams();
   const query = searchParams.get("query");
   const financialStatus = searchParams.get("financialStatus");
@@ -90,6 +90,16 @@ export default function Page() {
   ];
 
   // mutation
+  const queryClient = useQueryClient();
+  const activityLogMutation = useMutation({
+    mutationKey: ["log"],
+    mutationFn: postActivityLogService,
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["activity-log"],
+      });
+    },
+  });
 
   const updateMutation = useMutation({
     mutationKey: ["update-order"],
@@ -103,8 +113,13 @@ export default function Page() {
     onMutate() {
       setIsUpdating(true);
     },
-    onSuccess() {
+    onSuccess(_data, variables) {
       setIsUpdating(false);
+      activityLogMutation.mutate({
+        type: "confirm",
+        userId: info?.userId,
+        note: variables.orderId,
+      });
     },
     onError() {
       showToast({

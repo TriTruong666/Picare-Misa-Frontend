@@ -18,5 +18,6 @@ export type BuildOrder = {
 
 export type PostActivity = {
     userId?: string,
-    type: string
+    type: string,
+    note?: string
 }

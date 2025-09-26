@@ -2,12 +2,15 @@
 
 import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showToast } from "@/utils/toast";
 import { scanBarcodeService } from "@/services/orderService";
 import { scanDataState } from "@/atoms/service-atoms";
+import { postActivityLogService } from "@/services/activityService";
+import { useGetOwnerInfo } from "@/hooks/userHooks";
 
 export default function Page() {
+  const { data: info } = useGetOwnerInfo();
   const [isFast, setIsFast] = useState("normal");
   const [scanData, setScanData] = useAtom(scanDataState);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -18,7 +21,7 @@ export default function Page() {
       isActive: isFast === "normal",
       onClick: () => {
         setIsFast("normal");
-        setScanData({ orderId: "", trackingNumber: "" }); // reset khi đổi nguồn
+        setScanData({ orderId: "", trackingNumber: "" });
       },
     },
     {
@@ -31,15 +34,33 @@ export default function Page() {
     },
   ];
 
+  const queryClient = useQueryClient();
+  const activityLogMutation = useMutation({
+    mutationKey: ["log"],
+    mutationFn: postActivityLogService,
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["activity-log"],
+      });
+    },
+  });
+
   const scanMutation = useMutation({
     mutationKey: ["scan"],
     mutationFn: ({ isFast, data }: { isFast: string; data: typeof scanData }) =>
       scanBarcodeService(isFast, data),
-    onSuccess(data) {
+    onSuccess(data, variables) {
       if (data.message === "Quét barcode thành công") {
         showToast({
           content: data.message,
           status: "success",
+        });
+        activityLogMutation.mutate({
+          type: "stock",
+          userId: info?.userId,
+          note:
+            variables.data.orderId ||
+            `${variables.data.trackingNumber} (Đơn thường)`,
         });
       }
       if (data.message === "Đơn này chỉ có thể xuất hoá đơn") {
