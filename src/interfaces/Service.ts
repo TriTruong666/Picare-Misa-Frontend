@@ -21,3 +21,14 @@ export type PostActivity = {
     type: string,
     note?: string
 }
+
+export type CreateAttendanceServer = {
+    serverName: string,
+    domain: string,
+    username: string,
+    password: string
+}
+
+export type SyncAttendanceData = {
+    serverId: string
+}

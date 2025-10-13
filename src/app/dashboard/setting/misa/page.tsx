@@ -23,7 +23,7 @@ import {
 } from "@/services/misaService";
 import { showToast } from "@/utils/toast";
 import { useState } from "react";
-import { SyncMisaLoader } from "@/components/loading";
+import { SycnLoader } from "@/components/loading";
 
 export default function Page() {
   const { data: config, isLoading: isLoadingConfig } = useGetMisaConfig();
@@ -89,11 +89,11 @@ export default function Page() {
     <div className="flex flex-col w-full">
       {isLoadingConfig ? (
         <>
-          <SyncMisaLoader />
+          <SycnLoader />
         </>
       ) : isLoadingSync ? (
         <>
-          <SyncMisaLoader />
+          <SycnLoader />
         </>
       ) : !config?.accessToken ? (
         <>

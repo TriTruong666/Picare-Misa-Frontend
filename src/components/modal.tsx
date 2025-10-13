@@ -2,6 +2,7 @@
 
 import { clientDataState } from "@/atoms/client-atoms";
 import {
+  addAttendanceServerModal,
   blockModalState,
   buildDocumentModalState,
   invoiceModalState,
@@ -10,9 +11,12 @@ import {
 } from "@/atoms/modal-atoms";
 import { Button, Modal, ModalContent } from "@heroui/react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { ScanAnimation } from "./animation";
-import { scanDataState } from "@/atoms/service-atoms";
+import {
+  createAttendanceServerState,
+  scanDataState,
+} from "@/atoms/service-atoms";
 import {
   scanBarcodeService,
   syncOrderService,
@@ -27,6 +31,8 @@ import { useParams } from "next/navigation";
 import { buildOrderService } from "@/services/misaService";
 import { useGetOwnerInfo } from "@/hooks/userHooks";
 import { postActivityLogService } from "@/services/activityService";
+import { createAttendanceServerService } from "@/services/attendanceService";
+import { linkValidation } from "@/utils/validate";
 
 export function BlockModal() {
   const [isToggleModal, setIsToggleModal] = useAtom(blockModalState);
@@ -507,6 +513,173 @@ export function BuildMisaDocumentModal() {
               <p className="!text-[14px] text-white font-bold">
                 Xác Nhận Xin Chứng Từ
               </p>
+            </Button>
+          </div>
+        </div>
+      </ModalContent>
+    </Modal>
+  );
+}
+
+export function AddAttendanceServerModal() {
+  const [isToggleModal, setIsToggleModal] = useAtom(addAttendanceServerModal);
+  const [submitData, setSubmitData] = useAtom(createAttendanceServerState);
+  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationKey: ["create-attendance-server"],
+    mutationFn: createAttendanceServerService,
+    onSuccess(data) {
+      if (data.message === "Tạo máy chủ chấm công thành công") {
+        queryClient.invalidateQueries({
+          queryKey: ["attendance-server"],
+        });
+        showToast({
+          content: data.message,
+          status: "success",
+        });
+        setIsToggleModal(false);
+        setSubmitData({
+          domain: "",
+          password: "",
+          serverName: "",
+          username: "",
+        });
+      }
+    },
+  });
+
+  const handleOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setSubmitData({
+      ...submitData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = () => {
+    if (
+      submitData.domain === "" ||
+      submitData.password === "" ||
+      submitData.username === "" ||
+      submitData.serverName === ""
+    ) {
+      showToast({
+        content: "Vui lòng nhập hết tất cả các trường cần thiết",
+        status: "warning",
+      });
+      return;
+    }
+    const linkValidate = linkValidation(submitData.domain);
+    if (!linkValidate) {
+      showToast({
+        content: "Vui lòng nhập đúng định dạng của đường link",
+        status: "danger",
+      });
+      return;
+    }
+    createMutation.mutate(submitData);
+  };
+  return (
+    <Modal
+      placement="center"
+      backdrop="opaque"
+      radius="md"
+      shadow="md"
+      size="2xl"
+      onClose={() => setIsToggleModal(false)}
+      isKeyboardDismissDisabled={true}
+      isOpen={isToggleModal}
+    >
+      <ModalContent>
+        <div className="flex flex-col !px-[40px] bg-white py-[40px] font-manrope gap-y-[20px]">
+          <h2 className="text-[22px] font-bold text-center">
+            Thêm máy chủ chấm công
+          </h2>
+          <div className="flex flex-col gap-y-[15px]">
+            <div className="flex flex-col gap-y-[5px]">
+              <label
+                htmlFor="name"
+                className="text-[13px] font-medium text-neutral-800"
+              >
+                Tên máy chủ
+              </label>
+              <input
+                id="name"
+                type="text"
+                name="serverName"
+                onChange={handleOnChange}
+                value={submitData.serverName}
+                placeholder="VD: Picare-01"
+                className="outline-none text-[13px] px-[15px] py-[10px] transition-all duration-300 rounded-xl border border-neutral-500/30 focus:border-neutral-500"
+              />
+            </div>
+            <div className="flex flex-col gap-y-[5px]">
+              <label
+                htmlFor="domain"
+                className="text-[13px] font-medium text-neutral-800"
+              >
+                Domain
+              </label>
+              <input
+                id="domain"
+                type="text"
+                name="domain"
+                onChange={handleOnChange}
+                value={submitData.domain}
+                placeholder="VD: http://171.240.241.233:5000"
+                className="outline-none text-[13px] px-[15px] py-[10px] transition-all duration-300 rounded-xl border border-neutral-500/30 focus:border-neutral-500"
+              />
+              <span className="text-[12px] text-red-600 ml-[5px]">
+                Vui lòng copy URL và bỏ dấu / ở phía cuối
+              </span>
+            </div>
+            <div className="flex flex-col gap-y-[5px]">
+              <label
+                htmlFor="username"
+                className="text-[13px] font-medium text-neutral-800"
+              >
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                name="username"
+                onChange={handleOnChange}
+                value={submitData.username}
+                placeholder="VD: picare123"
+                className="outline-none text-[13px] px-[15px] py-[10px] transition-all duration-300 rounded-xl border border-neutral-500/30 focus:border-neutral-500"
+              />
+            </div>
+            <div className="flex flex-col gap-y-[5px]">
+              <label
+                htmlFor="password"
+                className="text-[13px] font-medium text-neutral-800"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                onChange={handleOnChange}
+                type="text"
+                value={submitData.password}
+                placeholder="VD: matkhau123"
+                className="outline-none text-[13px] px-[15px] py-[10px] transition-all duration-300 rounded-xl border border-neutral-500/30 focus:border-neutral-500"
+              />
+            </div>
+            <span className="text-[12px] text-red-600 ml-[5px]">
+              Nhập đúng để đăng nhập vào Auth Digest của HIKVISION
+            </span>
+          </div>
+          <div className="flex items-center justify-end">
+            <Button
+              onPress={handleSubmit}
+              size="md"
+              variant="flat"
+              className="w-full bg-black text-black"
+            >
+              <p className="!text-[14px] text-white font-bold">Xác Nhận Tạo</p>
             </Button>
           </div>
         </div>

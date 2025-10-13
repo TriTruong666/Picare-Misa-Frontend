@@ -35,7 +35,7 @@ export function TableOrderLoader() {
   );
 }
 
-export function SyncMisaLoader() {
+export function SycnLoader() {
   return (
     <div className="w-full desktop:h-[600px] max-desktop:h-[450px] flex flex-col justify-center items-center gap-y-[15px]">
       <DynamicLottie

@@ -4,7 +4,9 @@ import { User } from "@/interfaces/User";
 import { Chip } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useState } from "react";
+import React from "react";
+import { FaUsers } from "react-icons/fa";
+
 import { IoFileTrayOutline } from "react-icons/io5";
 import { LuWarehouse } from "react-icons/lu";
 import { AiOutlineScan } from "react-icons/ai";
@@ -36,6 +38,12 @@ export default function DashboardSidebar() {
       icon: AiOutlineScan,
       href: "/dashboard/scan",
       allowedRoles: ["admin", "stock"],
+    },
+    {
+      title: "Chấm công",
+      icon: FaUsers,
+      href: "/dashboard/attendance",
+      allowedRoles: ["admin"],
     },
   ];
 
