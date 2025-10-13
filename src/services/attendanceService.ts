@@ -38,9 +38,18 @@ export const getDataAttendanceService = async (page: number, limit: number) => {
     }
 }
 
-export const getAttendanceByServerService = async (serverId: string) => {
+export const getAttendanceEmployeeByServerService = async (serverId: string, page: number, limit: number) => {
     try {
-        const res = await axiosClient.get(`/attendance/by-server?serverId=${serverId}`)
+        const res = await axiosClient.get(`/attendance/by-server?serverId=${serverId}&page=${page}&limit=${limit}`)
+        return res.data.attendance_data
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+export const getAttendanceDataByServerService = async (serverId: string, page: number, limit: number) => {
+    try {
+        const res = await axiosClient.get(`/attendance/by-server?serverId=${serverId}&page=${page}&limit=${limit}`)
         return res.data
     } catch (error) {
         console.error(error)

@@ -25,3 +25,15 @@ export const useGetAttendanceEmployee = (page: number, limit: number) => {
         AttendanceService.getEmployeeAttendanceService(page, limit)
     );
 };
+
+export const useGetAttendanceEmployeeByServer = (serverId: string, page: number, limit: number) => {
+    return useFetch<AttendanceUser[]>(["attendance-employee", serverId, page, limit], async () =>
+        AttendanceService.getAttendanceEmployeeByServerService(serverId, page, limit)
+    );
+};
+
+export const useGetAttendanceDataByServer = (serverId: string, page: number, limit: number) => {
+    return useFetch<Data>(["attendance-data", serverId, page, limit], async () =>
+        AttendanceService.getAttendanceDataByServerService(serverId, page, limit)
+    );
+};
