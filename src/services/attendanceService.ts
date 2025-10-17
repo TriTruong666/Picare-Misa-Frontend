@@ -20,18 +20,18 @@ export const getAttendanceServerService = async () => {
     }
 }
 
-export const getEmployeeAttendanceService = async (page: number, limit: number) => {
+export const getEmployeeAttendanceService = async (page: number, limit: number, type?: string) => {
     try {
-        const res = await axiosClient.get(`/attendance/employee?page=${page}&limit=${limit}`)
+        const res = await axiosClient.get(`/attendance/employee?page=${page}&limit=${limit}&type=${type}`)
         return res.data.attendance
     } catch (error) {
         console.error(error)
     }
 }
 
-export const getDataAttendanceService = async (page: number, limit: number) => {
+export const getDataAttendanceService = async (page: number, limit: number, type?: string) => {
     try {
-        const res = await axiosClient.get(`/attendance/employee?page=${page}&limit=${limit}`)
+        const res = await axiosClient.get(`/attendance/employee?page=${page}&limit=${limit}&type=${type}`)
         return res.data
     } catch (error) {
         console.error(error)

@@ -30,5 +30,6 @@ export type CreateAttendanceServer = {
 }
 
 export type SyncAttendanceData = {
-    serverId: string
+    serverId: string,
+    minor: number
 }

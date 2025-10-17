@@ -8,5 +8,6 @@ export type AttendanceUser = {
     empId: string,
     empName: string,
     checkinTime: string
+    type: string
     server: AttendanceServer
 }

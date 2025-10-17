@@ -78,6 +78,8 @@ type ScanModalProps = {
 };
 
 export function ScanModal({ isFast, currentId }: ScanModalProps) {
+  const params = useParams<{ orderId: string }>();
+  const orderId = params.orderId;
   const { data: info } = useGetOwnerInfo();
   const [isToggleModal, setIsToggleModal] = useAtom(scanModalState);
   const [scanData, setScanData] = useAtom(scanDataState);
@@ -91,6 +93,32 @@ export function ScanModal({ isFast, currentId }: ScanModalProps) {
       queryClient.invalidateQueries({
         queryKey: ["activity-log"],
       });
+    },
+  });
+
+  const buildMutation = useMutation({
+    mutationKey: ["document", orderId],
+    mutationFn: buildOrderService,
+    onSuccess(data) {
+      if (data.message === "Đẩy đơn hàng sang MISA thành công") {
+        queryClient.invalidateQueries({
+          queryKey: ["detail"],
+        });
+        showToast({
+          content:
+            "Xin chứng từ thành công, vui lòng đợi kết quả tại Misa Amis",
+          status: "success",
+        });
+      }
+      setIsToggleModal(false);
+    },
+
+    onError() {
+      showToast({
+        content: "Đã có lỗi xảy ra, vui lòng thử lại",
+        status: "danger",
+      });
+      setIsToggleModal(false);
     },
   });
 
@@ -108,6 +136,9 @@ export function ScanModal({ isFast, currentId }: ScanModalProps) {
           type: "stock",
           userId: info?.userId,
           note: currentId,
+        });
+        buildMutation.mutate({
+          orderId: orderId,
         });
       }
       if (data.message === "Đơn này chỉ có thể xuất hoá đơn") {
@@ -419,46 +450,19 @@ export function BuildMisaDocumentModal() {
   const [isToggleModal, setIsToggleModal] = useAtom(buildDocumentModalState);
 
   const queryClient = useQueryClient();
-  const updateMutation = useMutation({
-    mutationKey: ["update-order"],
-    mutationFn: async ({
-      orderId,
-      data,
-    }: {
-      orderId: string;
-      data: UpdateOrder;
-    }) => updateStatusOrderService(orderId, data),
-
-    onSuccess() {
-      queryClient.invalidateQueries({
-        queryKey: ["detail"],
-      });
-      setIsToggleModal(false);
-    },
-    onError() {
-      showToast({
-        content: "Đã có lỗi xảy ra, vui lòng thử lại",
-        status: "danger",
-      });
-      setIsToggleModal(false);
-    },
-  });
 
   const buildMutation = useMutation({
     mutationKey: ["document", orderId],
     mutationFn: buildOrderService,
     onSuccess(data) {
       if (data.message === "Đẩy đơn hàng sang MISA thành công") {
+        queryClient.invalidateQueries({
+          queryKey: ["detail"],
+        });
         showToast({
           content:
             "Xin chứng từ thành công, vui lòng đợi kết quả tại Misa Amis",
           status: "success",
-        });
-        updateMutation.mutate({
-          data: {
-            status: "completed",
-          },
-          orderId: orderId,
         });
       }
       setIsToggleModal(false);

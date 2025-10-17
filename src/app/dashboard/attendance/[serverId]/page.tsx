@@ -78,13 +78,25 @@ export default function Page() {
     },
   });
 
-  const handleSyncAttendance = () => {
-    syncMutation.mutate({
-      type: "single",
-      data: {
-        serverId: serverId as string,
-      },
-    });
+  const handleSyncAttendance = async () => {
+    try {
+      await syncMutation.mutate({
+        type: "single",
+        data: {
+          serverId: serverId as string,
+          minor: 75 as number,
+        },
+      });
+      console.log("Đồng bộ quét khuôn mặt xong");
+      await syncMutation.mutate({
+        type: "single",
+        data: {
+          serverId: serverId as string,
+          minor: 104 as number,
+        },
+      });
+      console.log("Đồng bộ quét vân tay xong");
+    } catch (error) {}
   };
   return (
     <>
@@ -124,7 +136,11 @@ export default function Page() {
           <div className="flex justify-between items-center">
             <div className="flex">
               <div className="flex items-center rounded-full px-[7px] py-[5px] bg-neutral-400/40 gap-x-[5px]">
-                <NavLinkItem title="Tất cả" href="/dashboard/attendance" />
+                <NavLinkItem title="Khuôn mặt" href="/dashboard/attendance" />
+                <NavLinkItem
+                  title="Vân tay"
+                  href="/dashboard/attendance/fingerprint"
+                />
                 {(servers ?? []).map((server) => (
                   <NavLinkItem
                     key={server.serverId}
@@ -159,14 +175,17 @@ export default function Page() {
               <table>
                 <thead>
                   <tr className="border border-black/10 grid grid-cols-12">
-                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-3 px-[25px]">
-                      Mã nhân viên
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-1 px-[25px]">
+                      ID
                     </th>
                     <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-4 px-[25px]">
                       Tên nhân viên
                     </th>
                     <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-3 px-[25px]">
                       Thời gian
+                    </th>
+                    <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
+                      Loại
                     </th>
                     <th className="text-start font-semibold border-r border-black/10 text-[14px] py-[10px] text-black/70 col-span-2 px-[25px]">
                       Máy chủ
@@ -205,10 +224,11 @@ function EmployeeTableItem({
   empId,
   empName,
   server,
+  type,
 }: AttendanceUser) {
   return (
     <tr className="border-x border-b border-black/10 grid grid-cols-12">
-      <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px]">
+      <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-1 px-[25px]">
         {empId}
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-4 px-[25px]">
@@ -216,6 +236,13 @@ function EmployeeTableItem({
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-3 px-[25px]">
         {formatDateAndTime(checkinTime)}
+      </td>
+      <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-2 px-[25px]">
+        {type === "face"
+          ? "Khuôn mặt"
+          : type === "fingerprint"
+          ? "Vân tay"
+          : "Khác"}
       </td>
       <td className="text-start font-semibold border-r border-black/10 text-[14px] py-[13px] col-span-2 px-[25px]">
         {server.serverName}

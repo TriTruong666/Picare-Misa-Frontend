@@ -14,15 +14,15 @@ export const useGetAttendanceServer = () => {
     );
 };
 
-export const useGetAttendanceData = (page: number, limit: number) => {
-    return useFetch<Data>(["attendance-data"], async () =>
-        AttendanceService.getDataAttendanceService(page, limit)
+export const useGetAttendanceData = (page: number, limit: number, type?: string) => {
+    return useFetch<Data>(["attendance-data", page, limit, type], async () =>
+        AttendanceService.getDataAttendanceService(page, limit, type)
     );
 };
 
-export const useGetAttendanceEmployee = (page: number, limit: number) => {
-    return useFetch<AttendanceUser[]>(["attendance-employee", page, limit], async () =>
-        AttendanceService.getEmployeeAttendanceService(page, limit)
+export const useGetAttendanceEmployee = (page: number, limit: number, type?: string) => {
+    return useFetch<AttendanceUser[]>(["attendance-employee", page, limit, type], async () =>
+        AttendanceService.getEmployeeAttendanceService(page, limit, type)
     );
 };
 

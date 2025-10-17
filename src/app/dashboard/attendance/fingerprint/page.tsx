@@ -28,7 +28,7 @@ export default function Page() {
   const { data: servers = [] } = useGetAttendanceServer();
   const limit = 20;
   const [page, setPage] = useState(1);
-  const type = "face";
+  const type = "fingerprint";
   const { data: employees = [], isLoading: isLoadingAttendance } =
     useGetAttendanceEmployee(page, limit, type);
   const { data: attendanceData } = useGetAttendanceData(page, limit, type);
