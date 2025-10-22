@@ -195,17 +195,17 @@ function NotificationDropdown() {
             </div>
             {/* Main Here */}
             <div className="flex-1 flex-col mt-[10px] overflow-auto scroll-smooth">
-              {activities?.length === 0 && (
-                <>
-                  <div className="flex items-center justify-center h-[400px]">
-                    <p className="text-sm font-semibold">
-                      Chưa có hoạt động nào
-                    </p>
-                  </div>
-                </>
-              )}
               {selectedTab === "activity" && (
                 <>
+                  {activities?.length === 0 && (
+                    <>
+                      <div className="flex items-center justify-center h-[400px]">
+                        <p className="text-sm font-semibold">
+                          Chưa có hoạt động nào
+                        </p>
+                      </div>
+                    </>
+                  )}
                   <div className="flex flex-col">
                     {activities?.map((item) => (
                       <ActivityItem key={item.logId} {...item} />
@@ -231,6 +231,21 @@ function NotificationDropdown() {
 }
 
 function ActivityItem({ createdAt, name, type, note }: ActivityLog) {
+  if (type === "accounting")
+    return (
+      <div className="flex justify-between gap-x-[10px] py-[15px] border-b border-neutral-400/30 px-[20px] last:border-hidden">
+        <div className="flex flex-col gap-y-[5px]">
+          <div className="flex items-center gap-x-[7px]">
+            <strong className="text-[13px]">{name}</strong>
+            <span className="text-black/60 text-[12px]">
+              {relativeTime(createdAt)}
+            </span>
+          </div>
+          <p className="text-[13px] text-black/60">{note}</p>
+        </div>
+        <div className="w-[8px] h-[8px] rounded-full bg-green-500 mt-[5px]"></div>
+      </div>
+    );
   if (type === "logout")
     return (
       <div className="flex justify-between gap-x-[10px] py-[15px] border-b border-neutral-400/30 px-[20px] last:border-hidden">
