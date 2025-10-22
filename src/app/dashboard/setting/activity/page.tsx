@@ -61,6 +61,17 @@ export default function Page() {
 }
 
 function LogItem({ createdAt, name, type, note }: ActivityLog) {
+  if (type === "accounting") {
+    return (
+      <div className="flex items-center justify-between pb-[15px] pt-[12px]">
+        <p className="text-sm">
+          {name}: {note}
+        </p>
+        <span className="text-[13px] font-bold">{relativeTime(createdAt)}</span>
+      </div>
+    );
+  }
+
   if (type === "try-login") {
     return (
       <div className="flex items-center justify-between pb-[15px] pt-[12px]">
