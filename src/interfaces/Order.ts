@@ -2,12 +2,12 @@ export type Order = {
   orderId: string;
   saleDate: string;
   financialStatus:
-  | "pending"
-  | "paid"
-  | "partially_paid"
-  | "refunded"
-  | "voided"
-  | "partially_refunded";
+    | "pending"
+    | "paid"
+    | "partially_paid"
+    | "refunded"
+    | "voided"
+    | "partially_refunded";
   carrierStatus: string;
   realCarrierStatus: string;
   totalPrice: number;
@@ -15,20 +15,18 @@ export type Order = {
   totalDiscountPrice: number;
   cancelledStatus: string;
   source: string;
-  status:
-  | "invoice"
-  | "stock"
-  | "pending"
-  | "completed";
+  status: "invoice" | "stock" | "pending" | "completed";
   note: string;
-  trackingNumber: string,
-  isSPXFast: string,
-  line_items: LineItem[]
+  trackingNumber: string;
+  isSPXFast: string;
+  address: string;
+  customerName: string;
+  line_items: LineItem[];
 };
 
 type LineItem = {
-  sku: string,
-  price: number,
-  qty: number,
-  productName: string
-}
+  sku: string;
+  price: number;
+  qty: number;
+  productName: string;
+};

@@ -177,6 +177,10 @@ export default function Page() {
                 </p>
               </div>
               <div className="flex items-center justify-between">
+                <p className="text-sm">Khách hàng</p>
+                <p className="text-sm font-semibold">{detail?.customerName}</p>
+              </div>
+              <div className="flex items-center justify-between">
                 <p className="text-sm">Sàn</p>
                 <p className="text-sm font-semibold">{detail?.source}</p>
               </div>
